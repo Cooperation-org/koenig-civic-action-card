@@ -69,11 +69,18 @@ function CivicActionCardWrapper({nodeKey, ...props}) {
         });
     }, [editor, nodeKey]);
 
+    // Get bridge URL from multiple sources (priority order)
+    const bridgeUrl = 
+        cardConfig.civicBridgeUrl ||
+        (typeof window !== 'undefined' && window.__GHOST_CONFIG__?.civicBridgeUrl) ||
+        (typeof process !== 'undefined' && process.env.CIVIC_BRIDGE_URL) ||
+        'http://127.0.0.1:5000';
+
     return (
         <CivicActionCard
             {...props}
             isSelected={isSelected}
-            bridgeUrl={cardConfig.civicBridgeUrl || 'http://127.0.0.1:5000'}
+            bridgeUrl={bridgeUrl}
             onUpdate={handleUpdate}
         />
     );
