@@ -1,30 +1,28 @@
-import React from 'react';
+// Just the React component - no node logic
+import React, {useState, useCallback, useEffect} from 'react';
 import './CivicActionCard.css';
 
 export function CivicActionCard({
-    actionId,
-    title,
-    description,
-    eventType,
-    eventDate,
-    location,
-    imageUrl,
-    takeActionUrl,
-    source,
-    isSelected,
-    bridgeUrl,
+    actionId = '',
+    title = '',
+    description = '',
+    eventType = '',
+    eventDate = '',
+    location = '',
+    imageUrl = '',
+    takeActionUrl = '',
+    source = 'community',
+    bridgeUrl = 'http://127.0.0.1:5000',
     onUpdate
 }) {
-    const [searchTerm, setSearchTerm] = React.useState('');
-    const [searchResults, setSearchResults] = React.useState([]);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    // If no action selected, show search interface
     const showSearch = !actionId || !title;
 
-    // Search civic actions
-    const handleSearch = React.useCallback(async (term) => {
+    const handleSearch = useCallback(async (term) => {
         setSearchTerm(term);
         if (!term || term.length < 2) {
             setSearchResults([]);
@@ -53,25 +51,25 @@ export function CivicActionCard({
         }
     }, [bridgeUrl]);
 
-    // Select an action from search results
-    const handleSelectAction = React.useCallback((action) => {
-        onUpdate({
-            actionId: action.id,
-            source: action.source || 'community',
-            title: action.title,
-            description: action.description,
-            eventType: action.eventType,
-            eventDate: action.eventDate,
-            location: action.location,
-            imageUrl: action.imageUrl,
-            takeActionUrl: action.takeActionUrl
-        });
+    const handleSelectAction = useCallback((action) => {
+        if (onUpdate) {
+            onUpdate({
+                actionId: action.id,
+                source: action.source || 'community',
+                title: action.title,
+                description: action.description,
+                eventType: action.eventType,
+                eventDate: action.eventDate,
+                location: action.location,
+                imageUrl: action.imageUrl,
+                takeActionUrl: action.takeActionUrl
+            });
+        }
         setSearchResults([]);
         setSearchTerm('');
     }, [onUpdate]);
 
-    // Debounced search
-    React.useEffect(() => {
+    useEffect(() => {
         const timer = setTimeout(() => {
             if (showSearch && searchTerm) {
                 handleSearch(searchTerm);
@@ -83,7 +81,7 @@ export function CivicActionCard({
 
     if (showSearch) {
         return (
-            <div className={`civic-action-search-card ${isSelected ? 'selected' : ''}`}>
+            <div className="civic-action-search-card">
                 <div className="civic-search-header">
                     <h4>Search Civic Actions</h4>
                     <p>Find and embed a civic action from your community</p>
@@ -98,13 +96,8 @@ export function CivicActionCard({
                     autoFocus
                 />
 
-                {loading && (
-                    <div className="civic-search-loading">Searching...</div>
-                )}
-
-                {error && (
-                    <div className="civic-search-error">{error}</div>
-                )}
+                {loading && <div className="civic-search-loading">Searching...</div>}
+                {error && <div className="civic-search-error">{error}</div>}
 
                 {searchResults.length > 0 && (
                     <div className="civic-search-results">
@@ -115,11 +108,7 @@ export function CivicActionCard({
                                 onClick={() => handleSelectAction(action)}
                             >
                                 {action.imageUrl && (
-                                    <img
-                                        src={action.imageUrl}
-                                        alt={action.title}
-                                        className="result-image"
-                                    />
+                                    <img src={action.imageUrl} alt={action.title} className="result-image" />
                                 )}
                                 <div className="result-content">
                                     {action.eventType && (
@@ -133,9 +122,7 @@ export function CivicActionCard({
                                         {action.eventDate && (
                                             <span>📅 {new Date(action.eventDate).toLocaleDateString()}</span>
                                         )}
-                                        {action.location && (
-                                            <span>📍 {action.location}</span>
-                                        )}
+                                        {action.location && <span>📍 {action.location}</span>}
                                     </div>
                                 </div>
                             </div>
@@ -152,12 +139,11 @@ export function CivicActionCard({
         );
     }
 
-    // Show preview of selected action
     const eventDateObj = eventDate ? new Date(eventDate) : null;
     const isExpired = eventDateObj && eventDateObj < new Date();
 
     return (
-        <div className={`civic-action-preview-card ${isSelected ? 'selected' : ''} ${isExpired ? 'expired' : ''}`}>
+        <div className={`civic-action-preview-card ${isExpired ? 'expired' : ''}`}>
             {imageUrl && (
                 <div className="preview-image">
                     <img src={imageUrl} alt={title} />
@@ -167,13 +153,9 @@ export function CivicActionCard({
             <div className="preview-content">
                 <div className="preview-meta">
                     {eventType && (
-                        <span className={`preview-badge type-${eventType}`}>
-                            {eventType}
-                        </span>
+                        <span className={`preview-badge type-${eventType}`}>{eventType}</span>
                     )}
-                    {isExpired && (
-                        <span className="preview-badge expired-badge">Past Event</span>
-                    )}
+                    {isExpired && <span className="preview-badge expired-badge">Past Event</span>}
                 </div>
 
                 <h3 className="preview-title">{title}</h3>
@@ -191,15 +173,11 @@ export function CivicActionCard({
                                 })}
                             </div>
                         )}
-                        {location && (
-                            <div className="preview-detail">
-                                📍 {location}
-                            </div>
-                        )}
+                        {location && <div className="preview-detail">📍 {location}</div>}
                     </div>
                 )}
 
-                {isSelected && (
+                {onUpdate && (
                     <div className="preview-actions">
                         <button
                             className="preview-button change-action"
