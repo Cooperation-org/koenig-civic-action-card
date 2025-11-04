@@ -12,7 +12,9 @@ export function CivicActionCard({
     imageUrl = '',
     takeActionUrl = '',
     source = 'community',
-    bridgeUrl = 'http://127.0.0.1:5000',
+    bridgeUrl = (typeof window !== 'undefined' && window.__GHOST_CONFIG__?.civicBridgeUrl) ||
+                (typeof process !== 'undefined' && process.env.CIVIC_BRIDGE_URL) ||
+                'http://127.0.0.1:5000',
     onUpdate
 }) {
     const [searchTerm, setSearchTerm] = useState('');
