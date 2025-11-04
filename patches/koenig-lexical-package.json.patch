@@ -1,0 +1,12 @@
+--- a/packages/koenig-lexical/package.json
++++ b/packages/koenig-lexical/package.json
+@@ -112,5 +112,8 @@
+     "vite-plugin-svgr": "4.5.0",
+     "vitest": "1.6.1",
+     "y-websocket": "^3.0.0",
+     "yjs": "^13.6.26"
++  },
++  "dependencies": {
++    "@linked-claims/koenig-civic-action-card": "^1.0.2"
+   }
+ }
