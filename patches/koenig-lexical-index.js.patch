@@ -1,0 +1,18 @@
+--- a/packages/koenig-lexical/src/index.js
++++ b/packages/koenig-lexical/src/index.js
+@@ -11,6 +11,7 @@ import AudioPlugin from './plugins/AudioPlugin';
+ import CallToActionPlugin from './plugins/CallToActionPlugin';
+ import CalloutPlugin from './plugins/CalloutPlugin';
+ import CardMenuPlugin from './plugins/CardMenuPlugin';
++import CivicActionPlugin from './plugins/CivicActionPlugin';
+ import DragDropPastePlugin from './plugins/DragDropPastePlugin';
+ import DragDropReorderPlugin from './plugins/DragDropReorderPlugin';
+ import EmojiPickerPlugin from './plugins/EmojiPickerPlugin';
+@@ -67,6 +68,7 @@ export {
+     AudioPlugin,
+     CalloutPlugin,
+     CallToActionPlugin,
+     CardMenuPlugin,
++    CivicActionPlugin,
+     DragDropPastePlugin,
+     DragDropReorderPlugin,

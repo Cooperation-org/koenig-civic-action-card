@@ -1,0 +1,18 @@
+--- a/packages/koenig-lexical/src/plugins/AllDefaultPlugins.jsx
++++ b/packages/koenig-lexical/src/plugins/AllDefaultPlugins.jsx
+@@ -11,6 +11,7 @@ import {AudioPlugin} from '../plugins/AudioPlugin';
+ import {BookmarkPlugin} from '../plugins/BookmarkPlugin';
+ import {ButtonPlugin} from '../plugins/ButtonPlugin';
+ import {CalloutPlugin} from '../plugins/CalloutPlugin';
++import {CivicActionPlugin} from '../plugins/CivicActionPlugin';
+ import {CardMenuPlugin} from '../plugins/CardMenuPlugin';
+ import {EmailCtaPlugin} from '../plugins/EmailCtaPlugin';
+ import {EmailPlugin} from '../plugins/EmailPlugin';
+@@ -57,6 +58,7 @@ export const AllDefaultPlugins = () => {
+             <TogglePlugin />
+             <HeaderPlugin />
+             <BookmarkPlugin />
++            <CivicActionPlugin />
+             <PaywallPlugin />
+             <ProductPlugin />
+             <EmailCtaPlugin />
