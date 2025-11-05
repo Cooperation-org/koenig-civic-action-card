@@ -2,131 +2,90 @@
 
 ## Overview
 
-To add the civic action card to Ghost, you need to patch Koenig to add the integration wrapper and plugin.
+This package integrates with Ghost by patching Koenig to include the civic action card node and plugin.
 
-## Prerequisites
+## Directory Structure
 
-- Civic action card package: `@linked-claims/koenig-civic-action-card`
-- Koenig repository cloned
-- Node.js and yarn installed
+- `/var/www/gv/koenig-civic-action-card` - This package
+- `/var/www/gv/Koenig` - Cloned TryGhost/Koenig (patched)
+- `/var/www/gv/ghost-civic-new` - Ghost monorepo (dev/build)
+- `/var/www/gv/ghost-civic/current/core/built/admin/` - Production Ghost
 
-## Integration Steps
+## Generate Patch File
 
-### 1. Clone Koenig
+Run on server where Koenig is already modified:
 
 ```bash
+cd /var/www/gv/Koenig
+git diff HEAD > ~/koenig-civic-action.patch
+```
+
+## New Server Install
+
+```bash
+# 1. Clone Koenig
 cd /var/www/gv
 git clone https://github.com/TryGhost/Koenig.git
 cd Koenig
 yarn install
-```
 
-### 2. Install Civic Action Package in Koenig
-
-```bash
+# 2. Install civic action card package
 cd packages/koenig-lexical
 yarn add @linked-claims/koenig-civic-action-card
-```
 
-### 3. Apply Changes
-
-Create three files in Koenig:
-
-**File 1: `packages/koenig-lexical/src/nodes/CivicActionNode.jsx`**
-
-Wrapper that integrates the civic action card with Koenig's architecture.
-
-**File 2: `packages/koenig-lexical/src/plugins/CivicActionPlugin.jsx`**
-
-Plugin that handles the INSERT_CIVIC_ACTION_COMMAND.
-
-**File 3: Updates to existing files**
-- Export node and plugin in `src/index.js`
-- Register plugin in `src/plugins/AllDefaultPlugins.jsx`
-
-### 4. Generate Patch
-
-After making changes:
-
-```bash
+# 3. Apply patch
 cd /var/www/gv/Koenig
+git apply ~/koenig-civic-action.patch
 
-# Create patch of your changes
-git add .
-git diff --cached > /path/to/koenig-civic-action.patch
-
-# Or if uncommitted:
-git diff > /path/to/koenig-civic-action.patch
-```
-
-### 5. Build Koenig
-
-```bash
+# 4. Build Koenig
 cd packages/koenig-lexical
 yarn build
-```
 
-### 6. Copy to Ghost Admin
-
-```bash
+# 5. Copy to Ghost admin
 cp -r dist/* /var/www/gv/ghost-civic-new/ghost/admin/node_modules/@tryghost/koenig-lexical/dist/
-```
 
-### 7. Build Ghost Admin
-
-```bash
+# 6. Build Ghost admin
 cd /var/www/gv/ghost-civic-new/ghost/admin
 yarn build:dev
-```
 
-### 8. Deploy
-
-```bash
+# 7. Deploy
 sudo cp -r dist/* /var/www/gv/ghost-civic/current/core/built/admin/
 sudo systemctl restart ghost_goldavelez-org.service
 ```
 
-## Reusing the Patch
-
-For other Ghost installations or Koenig version updates:
+## Upgrade Package on Existing Server
 
 ```bash
-# Clone fresh Koenig
-git clone https://github.com/TryGhost/Koenig.git
-cd Koenig
+# 1. Update civic action card package
+cd /var/www/gv/Koenig/packages/koenig-lexical
+yarn upgrade @linked-claims/koenig-civic-action-card
 
-# Install dependencies
-yarn install
+# 2. Rebuild Koenig
+yarn build
 
-# Apply patch
-git apply /path/to/koenig-civic-action.patch
+# 3. Copy to Ghost admin
+cp -r dist/* /var/www/gv/ghost-civic-new/ghost/admin/node_modules/@tryghost/koenig-lexical/dist/
 
-# May need manual fixes if Koenig changed significantly
+# 4. Rebuild Ghost admin
+cd /var/www/gv/ghost-civic-new/ghost/admin
+yarn build:dev
 
-# Continue from step 5 above
+# 5. Deploy
+sudo cp -r dist/* /var/www/gv/ghost-civic/current/core/built/admin/
+sudo systemctl restart ghost_goldavelez-org.service
 ```
+
+## Patch Contents
+
+The patch creates/modifies:
+- `packages/koenig-lexical/src/nodes/CivicActionNode.jsx`
+- `packages/koenig-lexical/src/plugins/CivicActionPlugin.jsx`
+- `packages/koenig-lexical/src/index.js` (exports)
+- `packages/koenig-lexical/src/plugins/AllDefaultPlugins.jsx` (registration)
 
 ## Troubleshooting
 
-**Build fails with "generateDecoratorNode not exported":**
-- Version mismatch between civic card package and Koenig's kg-default-nodes
-- Solution: Rebuild civic action card package with same kg-default-nodes version as Koenig
-
-**Card doesn't appear in menu:**
-- Check plugin is registered in AllDefaultPlugins.jsx
-- Check exports in index.js
-- Clear browser cache
-
-**Card appears but errors:**
-- Check browser console for errors
-- Verify CivicActionCard component receives correct props
-- Check bridgeUrl configuration
-
-## Maintenance
-
-When Ghost/Koenig updates:
-1. Clone new Koenig version
-2. Attempt to apply patch
-3. Fix any conflicts manually
-4. Rebuild and test
-5. Update patch file if needed
+**Patch fails:** Manually resolve conflicts, regenerate patch
+**Build fails:** Check kg-default-nodes version match
+**Card missing:** Check AllDefaultPlugins.jsx registration, clear cache
+**Card errors:** Check browser console, verify bridgeUrl prop
