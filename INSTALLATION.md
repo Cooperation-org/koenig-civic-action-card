@@ -5,10 +5,9 @@
 Run the installation script on your Ghost server:
 
 ```bash
-cd /path/to/your/ghost/installation
 curl -o install-civic-action.sh https://raw.githubusercontent.com/YOUR-ORG/koenig-civic-action-card/main/install-civic-action.sh
 chmod +x install-civic-action.sh
-./install-civic-action.sh
+GHOST_DIR=/path/to/your/ghost ./install-civic-action.sh
 ```
 
 ## Manual Installation

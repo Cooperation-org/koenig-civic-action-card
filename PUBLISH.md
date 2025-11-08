@@ -17,8 +17,15 @@ npm publish
 ## 3. Upgrade on Server
 
 ```bash
-cd /path/to/ghost
+curl -o upgrade-civic-action.sh https://raw.githubusercontent.com/YOUR-ORG/koenig-civic-action-card/main/upgrade-civic-action.sh
+chmod +x upgrade-civic-action.sh
 ./upgrade-civic-action.sh
+```
+
+Or if you have the repo locally:
+
+```bash
+/path/to/koenig-civic-action-card/upgrade-civic-action.sh
 ```
 
 ## Version Guidelines

@@ -18,24 +18,32 @@ yarn upgrade @linked-claims/koenig-civic-action-card
 
 # Step 2: Rebuild Koenig
 echo "Rebuilding Koenig..."
-cd "$KOENIG_DIR"
+cd "$KOENIG_DIR/packages/koenig-lexical"
 yarn build
 
-# Step 3: Copy to Ghost monorepo
-echo "Copying to Ghost..."
-cp -r "$KOENIG_DIR/packages/koenig-lexical/build" "$GHOST_MONO_DIR/ghost/admin/node_modules/@tryghost/koenig-lexical/"
+# Step 3: Install Ghost dependencies if needed
+if [ ! -d "$GHOST_MONO_DIR/node_modules" ]; then
+    echo "Installing Ghost dependencies..."
+    cd "$GHOST_MONO_DIR"
+    yarn install
+fi
 
-# Step 4: Rebuild Ghost Admin
+# Step 4: Copy to Ghost monorepo (root node_modules, not admin)
+echo "Copying to Ghost..."
+rm -rf "$GHOST_MONO_DIR/node_modules/@tryghost/koenig-lexical/dist"
+cp -r "$KOENIG_DIR/packages/koenig-lexical/dist" "$GHOST_MONO_DIR/node_modules/@tryghost/koenig-lexical/"
+
+# Step 5: Rebuild Ghost Admin
 echo "Rebuilding Ghost Admin..."
 cd "$GHOST_MONO_DIR/ghost/admin"
 yarn build:dev
 
-# Step 5: Deploy to production
+# Step 6: Deploy to production
 echo "Deploying to production..."
 PROD_ADMIN="$GHOST_DIR/current/core/built/admin"
 cp -r "$GHOST_MONO_DIR/ghost/admin/dist/"* "$PROD_ADMIN/"
 
-# Step 6: Restart Ghost
+# Step 7: Restart Ghost
 echo "Restarting Ghost..."
 cd "$GHOST_DIR"
 ghost restart
