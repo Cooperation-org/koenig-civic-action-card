@@ -15,18 +15,20 @@ export function CivicActionCard({
     bridgeUrl = (typeof window !== 'undefined' && window.__GHOST_CONFIG__?.civicBridgeUrl) ||
                 (typeof process !== 'undefined' && process.env.CIVIC_BRIDGE_URL) ||
                 'http://127.0.0.1:5000',
-    onUpdate
+    onUpdate,
+    isEditor = true
 }) {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchLocation, setSearchLocation] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const showSearch = !actionId || !title;
+    const showSearch = isEditor && (!actionId || !title);
 
-    const handleSearch = useCallback(async (term) => {
-        setSearchTerm(term);
-        if (!term || term.length < 2) {
+    const handleSearch = useCallback(async (query, loc) => {
+        // Need at least 2 characters in query OR location to search
+        if ((!query || query.length < 2) && (!loc || loc.length < 2)) {
             setSearchResults([]);
             return;
         }
@@ -35,7 +37,15 @@ export function CivicActionCard({
         setError(null);
 
         try {
-            const url = `${bridgeUrl}/api/civic-actions/search?q=${encodeURIComponent(term)}&limit=20`;
+            const params = new URLSearchParams();
+            if (query && query.trim()) {
+                params.append('q', query.trim());
+            }
+            if (loc && loc.trim()) {
+                params.append('location', loc.trim());
+            }
+
+            const url = `${bridgeUrl}/api/public/civic-actions?${params.toString()}`;
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -46,7 +56,7 @@ export function CivicActionCard({
             setSearchResults(results);
         } catch (err) {
             console.error('Search error:', err);
-            setError('Failed to search civic actions');
+            setError('Failed to search civic actions. Please check your connection.');
             setSearchResults([]);
         } finally {
             setLoading(false);
@@ -68,73 +78,196 @@ export function CivicActionCard({
             });
         }
         setSearchResults([]);
-        setSearchTerm('');
+        setSearchQuery('');
+        setSearchLocation('');
     }, [onUpdate]);
+
+    const handleClearSearch = useCallback(() => {
+        setSearchQuery('');
+        setSearchLocation('');
+        setSearchResults([]);
+        setError(null);
+    }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (showSearch && searchTerm) {
-                handleSearch(searchTerm);
+            if (showSearch) {
+                handleSearch(searchQuery, searchLocation);
             }
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [searchTerm, showSearch, handleSearch]);
+    }, [searchQuery, searchLocation, showSearch, handleSearch]);
 
     if (showSearch) {
         return (
             <div className="civic-action-search-card">
                 <div className="civic-search-header">
-                    <h4>Search Civic Actions</h4>
-                    <p>Find and embed a civic action from your community</p>
+                    <div className="civic-search-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </div>
+                    <div className="civic-search-title-wrapper">
+                        <h4>Embed Civic Action</h4>
+                        <p>Search for community events, volunteer opportunities, and initiatives</p>
+                    </div>
                 </div>
 
-                <input
-                    type="text"
-                    className="civic-search-input"
-                    placeholder="Search by title, description, or type..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    autoFocus
-                />
+                <div className="civic-search-inputs">
+                    <div className="civic-search-input-group">
+                        <svg className="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7 13C10.3137 13 13 10.3137 13 7C13 3.68629 10.3137 1 7 1C3.68629 1 1 3.68629 1 7C1 10.3137 3.68629 13 7 13Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M15 15L11.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <input
+                            type="text"
+                            className="civic-search-input"
+                            placeholder="Search by keyword..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            autoFocus
+                        />
+                        {searchQuery && (
+                            <button className="civic-clear-button" onClick={() => setSearchQuery('')} title="Clear keyword">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <path d="M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                            </button>
+                        )}
+                    </div>
 
-                {loading && <div className="civic-search-loading">Searching...</div>}
-                {error && <div className="civic-search-error">{error}</div>}
+                    <div className="civic-search-input-group">
+                        <svg className="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 6.66667C14 11.3333 8 15.3333 8 15.3333C8 15.3333 2 11.3333 2 6.66667C2 5.07536 2.63214 3.54926 3.75736 2.42404C4.88258 1.29882 6.40869 0.666672 8 0.666672C9.59131 0.666672 11.1174 1.29882 12.2426 2.42404C13.3679 3.54926 14 5.07536 14 6.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M8 8.66667C9.10457 8.66667 10 7.77124 10 6.66667C10 5.5621 9.10457 4.66667 8 4.66667C6.89543 4.66667 6 5.5621 6 6.66667C6 7.77124 6.89543 8.66667 8 8.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <input
+                            type="text"
+                            className="civic-search-input"
+                            placeholder="Filter by location..."
+                            value={searchLocation}
+                            onChange={(e) => setSearchLocation(e.target.value)}
+                        />
+                        {searchLocation && (
+                            <button className="civic-clear-button" onClick={() => setSearchLocation('')} title="Clear location">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <path d="M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                {searchResults.length > 0 && (
-                    <div className="civic-search-results">
-                        {searchResults.map(action => (
-                            <div
-                                key={action.id}
-                                className="civic-search-result"
-                                onClick={() => handleSelectAction(action)}
-                            >
-                                {action.imageUrl && (
-                                    <img src={action.imageUrl} alt={action.title} className="result-image" />
-                                )}
-                                <div className="result-content">
-                                    {action.eventType && (
-                                        <span className={`result-badge type-${action.eventType}`}>
-                                            {action.eventType}
-                                        </span>
-                                    )}
-                                    <strong className="result-title">{action.title}</strong>
-                                    <p className="result-description">{action.description}</p>
-                                    <div className="result-meta">
-                                        {action.eventDate && (
-                                            <span>📅 {new Date(action.eventDate).toLocaleDateString()}</span>
-                                        )}
-                                        {action.location && <span>📍 {action.location}</span>}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                {loading && (
+                    <div className="civic-search-loading">
+                        <div className="loading-spinner"></div>
+                        <span>Searching civic actions...</span>
                     </div>
                 )}
 
-                {searchTerm && !loading && searchResults.length === 0 && (
+                {error && (
+                    <div className="civic-search-error">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" strokeWidth="1.5"/>
+                            <path d="M10 6V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            <path d="M10 14H10.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                {!loading && !error && searchResults.length > 0 && (
+                    <div className="civic-search-results">
+                        <div className="civic-results-header">
+                            <span className="civic-results-count">{searchResults.length} {searchResults.length === 1 ? 'action' : 'actions'} found</span>
+                        </div>
+                        {searchResults.map(action => {
+                            const eventDateObj = action.eventDate ? new Date(action.eventDate) : null;
+                            const isExpired = eventDateObj && eventDateObj < new Date();
+
+                            return (
+                                <div
+                                    key={action.id}
+                                    className={`civic-search-result ${isExpired ? 'expired' : ''}`}
+                                    onClick={() => handleSelectAction(action)}
+                                >
+                                    {action.imageUrl && (
+                                        <div className="result-image-wrapper">
+                                            <img src={action.imageUrl} alt={action.title} className="result-image" />
+                                        </div>
+                                    )}
+                                    <div className="result-content">
+                                        <div className="result-header">
+                                            {action.eventType && (
+                                                <span className={`result-badge type-${action.eventType.toLowerCase().replace(/\s+/g, '-')}`}>
+                                                    {action.eventType}
+                                                </span>
+                                            )}
+                                            {isExpired && <span className="result-badge expired-badge">Past Event</span>}
+                                        </div>
+                                        <h5 className="result-title">{action.title}</h5>
+                                        <p className="result-description">{action.description}</p>
+                                        <div className="result-meta">
+                                            {eventDateObj && (
+                                                <span className="result-meta-item">
+                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect x="2" y="3" width="10" height="9" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                                                        <path d="M2 6H12" stroke="currentColor" strokeWidth="1.2"/>
+                                                        <path d="M5 1.5V4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                                        <path d="M9 1.5V4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                                    </svg>
+                                                    {eventDateObj.toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                </span>
+                                            )}
+                                            {action.location && (
+                                                <span className="result-meta-item">
+                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M12 5.83333C12 9.66667 7 12.8333 7 12.8333C7 12.8333 2 9.66667 2 5.83333C2 4.56678 2.50178 3.35204 3.38904 2.46487C4.27629 1.57761 5.49102 1.07583 6.75758 1.07583C8.02413 1.07583 9.23886 1.57761 10.1261 2.46487C11.0134 3.35204 11.5152 4.56678 11.5152 5.83333H12Z" stroke="currentColor" strokeWidth="1.2"/>
+                                                        <circle cx="7" cy="6" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                                                    </svg>
+                                                    {action.location}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="result-action">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {!loading && !error && (searchQuery || searchLocation) && searchResults.length === 0 && (
                     <div className="civic-search-empty">
-                        No civic actions found. Try a different search term.
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.3"/>
+                            <path d="M24 16V24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
+                            <path d="M24 32H24.02" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.3"/>
+                        </svg>
+                        <h5>No civic actions found</h5>
+                        <p>Try adjusting your search terms or location</p>
+                    </div>
+                )}
+
+                {!loading && !error && !searchQuery && !searchLocation && (
+                    <div className="civic-search-empty">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 34C27.732 34 34 27.732 34 20C34 12.268 27.732 6 20 6C12.268 6 6 12.268 6 20C6 27.732 12.268 34 20 34Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"/>
+                            <path d="M42 42L30 30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"/>
+                        </svg>
+                        <h5>Start searching</h5>
+                        <p>Enter keywords or a location to find civic actions</p>
                     </div>
                 )}
             </div>
@@ -145,19 +278,25 @@ export function CivicActionCard({
     const isExpired = eventDateObj && eventDateObj < new Date();
 
     return (
-        <div className={`civic-action-preview-card ${isExpired ? 'expired' : ''}`}>
+        <div className={`civic-action-preview-card ${isExpired ? 'expired' : ''} ${isEditor ? 'editor-mode' : 'reader-mode'}`}>
             {imageUrl && (
                 <div className="preview-image">
                     <img src={imageUrl} alt={title} />
+                    {isExpired && (
+                        <div className="preview-overlay">
+                            <span className="preview-overlay-badge">Past Event</span>
+                        </div>
+                    )}
                 </div>
             )}
 
             <div className="preview-content">
-                <div className="preview-meta">
+                <div className="preview-header">
                     {eventType && (
-                        <span className={`preview-badge type-${eventType}`}>{eventType}</span>
+                        <span className={`preview-badge type-${eventType.toLowerCase().replace(/\s+/g, '-')}`}>
+                            {eventType}
+                        </span>
                     )}
-                    {isExpired && <span className="preview-badge expired-badge">Past Event</span>}
                 </div>
 
                 <h3 className="preview-title">{title}</h3>
@@ -167,24 +306,60 @@ export function CivicActionCard({
                     <div className="preview-details">
                         {eventDateObj && (
                             <div className="preview-detail">
-                                📅 {eventDateObj.toLocaleDateString('en-US', {
-                                    weekday: 'short',
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                })}
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                                    <path d="M2 6H14" stroke="currentColor" strokeWidth="1.5"/>
+                                    <path d="M5 1.5V4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <path d="M11 1.5V4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                                <span>
+                                    {eventDateObj.toLocaleDateString('en-US', {
+                                        weekday: 'short',
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    })}
+                                </span>
                             </div>
                         )}
-                        {location && <div className="preview-detail">📍 {location}</div>}
+                        {location && (
+                            <div className="preview-detail">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M14 6.66667C14 11.3333 8 15.3333 8 15.3333C8 15.3333 2 11.3333 2 6.66667C2 5.07536 2.63214 3.54926 3.75736 2.42404C4.88258 1.29882 6.40869 0.666672 8 0.666672C9.59131 0.666672 11.1174 1.29882 12.2426 2.42404C13.3679 3.54926 14 5.07536 14 6.66667Z" stroke="currentColor" strokeWidth="1.5"/>
+                                    <circle cx="8" cy="6.66667" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                                </svg>
+                                <span>{location}</span>
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {onUpdate && (
+                {takeActionUrl && !isExpired && (
                     <div className="preview-actions">
+                        <a
+                            href={takeActionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="preview-button primary"
+                        >
+                            Take Action
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                        </a>
+                    </div>
+                )}
+
+                {isEditor && onUpdate && (
+                    <div className="preview-editor-actions">
                         <button
-                            className="preview-button change-action"
+                            className="preview-button secondary"
                             onClick={() => onUpdate({actionId: '', title: ''})}
                         >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 13C10.3137 13 13 10.3137 13 7C13 3.68629 10.3137 1 7 1C3.68629 1 1 3.68629 1 7C1 10.3137 3.68629 13 7 13Z" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M15 15L11.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                             Change Action
                         </button>
                     </div>
