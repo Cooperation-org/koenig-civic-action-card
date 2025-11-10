@@ -20,15 +20,16 @@ export function CivicActionCard({
 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLocation, setSearchLocation] = useState('');
+    const [searchState, setSearchState] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const showSearch = isEditor && (!actionId || !title);
 
-    const handleSearch = useCallback(async (query, loc) => {
-        // Need at least 2 characters in query OR location to search
-        if ((!query || query.length < 2) && (!loc || loc.length < 2)) {
+    const handleSearch = useCallback(async (query, loc, state) => {
+        // Need at least 2 characters in query OR location OR a state to search
+        if ((!query || query.length < 2) && (!loc || loc.length < 2) && !state) {
             setSearchResults([]);
             return;
         }
@@ -43,6 +44,9 @@ export function CivicActionCard({
             }
             if (loc && loc.trim()) {
                 params.append('location', loc.trim());
+            }
+            if (state) {
+                params.append('state', state);
             }
 
             const url = `${bridgeUrl}/api/public/civic-actions?${params.toString()}`;
@@ -80,11 +84,13 @@ export function CivicActionCard({
         setSearchResults([]);
         setSearchQuery('');
         setSearchLocation('');
+        setSearchState('');
     }, [onUpdate]);
 
     const handleClearSearch = useCallback(() => {
         setSearchQuery('');
         setSearchLocation('');
+        setSearchState('');
         setSearchResults([]);
         setError(null);
     }, []);
@@ -92,12 +98,12 @@ export function CivicActionCard({
     useEffect(() => {
         const timer = setTimeout(() => {
             if (showSearch) {
-                handleSearch(searchQuery, searchLocation);
+                handleSearch(searchQuery, searchLocation, searchState);
             }
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [searchQuery, searchLocation, showSearch, handleSearch]);
+    }, [searchQuery, searchLocation, searchState, showSearch, handleSearch]);
 
     if (showSearch) {
         return (
@@ -138,26 +144,89 @@ export function CivicActionCard({
                         )}
                     </div>
 
-                    <div className="civic-search-input-group">
-                        <svg className="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 6.66667C14 11.3333 8 15.3333 8 15.3333C8 15.3333 2 11.3333 2 6.66667C2 5.07536 2.63214 3.54926 3.75736 2.42404C4.88258 1.29882 6.40869 0.666672 8 0.666672C9.59131 0.666672 11.1174 1.29882 12.2426 2.42404C13.3679 3.54926 14 5.07536 14 6.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8 8.66667C9.10457 8.66667 10 7.77124 10 6.66667C10 5.5621 9.10457 4.66667 8 4.66667C6.89543 4.66667 6 5.5621 6 6.66667C6 7.77124 6.89543 8.66667 8 8.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <input
-                            type="text"
-                            className="civic-search-input"
-                            placeholder="Filter by location..."
-                            value={searchLocation}
-                            onChange={(e) => setSearchLocation(e.target.value)}
-                        />
-                        {searchLocation && (
-                            <button className="civic-clear-button" onClick={() => setSearchLocation('')} title="Clear location">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                                    <path d="M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                                </svg>
-                            </button>
-                        )}
+                    <div className="civic-search-input-row">
+                        <div className="civic-search-input-group">
+                            <svg className="input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 6.66667C14 11.3333 8 15.3333 8 15.3333C8 15.3333 2 11.3333 2 6.66667C2 5.07536 2.63214 3.54926 3.75736 2.42404C4.88258 1.29882 6.40869 0.666672 8 0.666672C9.59131 0.666672 11.1174 1.29882 12.2426 2.42404C13.3679 3.54926 14 5.07536 14 6.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M8 8.66667C9.10457 8.66667 10 7.77124 10 6.66667C10 5.5621 9.10457 4.66667 8 4.66667C6.89543 4.66667 6 5.5621 6 6.66667C6 7.77124 6.89543 8.66667 8 8.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <input
+                                type="text"
+                                className="civic-search-input"
+                                placeholder="City or zip code..."
+                                value={searchLocation}
+                                onChange={(e) => setSearchLocation(e.target.value)}
+                            />
+                            {searchLocation && (
+                                <button className="civic-clear-button" onClick={() => setSearchLocation('')} title="Clear location">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                        <path d="M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="civic-search-input-group civic-state-select">
+                            <select
+                                className="civic-search-select"
+                                value={searchState}
+                                onChange={(e) => setSearchState(e.target.value)}
+                            >
+                                <option value="">All States</option>
+                                <option value="AL">AL</option>
+                                <option value="AK">AK</option>
+                                <option value="AZ">AZ</option>
+                                <option value="AR">AR</option>
+                                <option value="CA">CA</option>
+                                <option value="CO">CO</option>
+                                <option value="CT">CT</option>
+                                <option value="DE">DE</option>
+                                <option value="FL">FL</option>
+                                <option value="GA">GA</option>
+                                <option value="HI">HI</option>
+                                <option value="ID">ID</option>
+                                <option value="IL">IL</option>
+                                <option value="IN">IN</option>
+                                <option value="IA">IA</option>
+                                <option value="KS">KS</option>
+                                <option value="KY">KY</option>
+                                <option value="LA">LA</option>
+                                <option value="ME">ME</option>
+                                <option value="MD">MD</option>
+                                <option value="MA">MA</option>
+                                <option value="MI">MI</option>
+                                <option value="MN">MN</option>
+                                <option value="MS">MS</option>
+                                <option value="MO">MO</option>
+                                <option value="MT">MT</option>
+                                <option value="NE">NE</option>
+                                <option value="NV">NV</option>
+                                <option value="NH">NH</option>
+                                <option value="NJ">NJ</option>
+                                <option value="NM">NM</option>
+                                <option value="NY">NY</option>
+                                <option value="NC">NC</option>
+                                <option value="ND">ND</option>
+                                <option value="OH">OH</option>
+                                <option value="OK">OK</option>
+                                <option value="OR">OR</option>
+                                <option value="PA">PA</option>
+                                <option value="RI">RI</option>
+                                <option value="SC">SC</option>
+                                <option value="SD">SD</option>
+                                <option value="TN">TN</option>
+                                <option value="TX">TX</option>
+                                <option value="UT">UT</option>
+                                <option value="VT">VT</option>
+                                <option value="VA">VA</option>
+                                <option value="WA">WA</option>
+                                <option value="WV">WV</option>
+                                <option value="WI">WI</option>
+                                <option value="WY">WY</option>
+                                <option value="DC">DC</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -248,7 +317,7 @@ export function CivicActionCard({
                     </div>
                 )}
 
-                {!loading && !error && (searchQuery || searchLocation) && searchResults.length === 0 && (
+                {!loading && !error && (searchQuery || searchLocation || searchState) && searchResults.length === 0 && (
                     <div className="civic-search-empty">
                         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.3"/>
@@ -256,18 +325,18 @@ export function CivicActionCard({
                             <path d="M24 32H24.02" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.3"/>
                         </svg>
                         <h5>No civic actions found</h5>
-                        <p>Try adjusting your search terms or location</p>
+                        <p>Try adjusting your search terms, location, or state</p>
                     </div>
                 )}
 
-                {!loading && !error && !searchQuery && !searchLocation && (
+                {!loading && !error && !searchQuery && !searchLocation && !searchState && (
                     <div className="civic-search-empty">
                         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M20 34C27.732 34 34 27.732 34 20C34 12.268 27.732 6 20 6C12.268 6 6 12.268 6 20C6 27.732 12.268 34 20 34Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"/>
                             <path d="M42 42L30 30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"/>
                         </svg>
                         <h5>Start searching</h5>
-                        <p>Enter keywords or a location to find civic actions</p>
+                        <p>Enter keywords, location, or select a state</p>
                     </div>
                 )}
             </div>
