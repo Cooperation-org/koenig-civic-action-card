@@ -3,8 +3,9 @@ console.log('[CIVIC] CivicActionNode.jsx is loading...');
 import React from 'react';
 import {CivicActionCard} from '@linked-claims/koenig-civic-action-card';
 import {KoenigCardWrapper} from '../index.js';
-import {DecoratorNode} from 'lexical';
+import {DecoratorNode, $getNodeByKey} from 'lexical';
 import {createCommand} from 'lexical';
+import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 
 console.log('[CIVIC] CivicActionCard imported:', CivicActionCard);
 
@@ -93,13 +94,17 @@ export class CivicActionNode extends DecoratorNode {
         console.log('[CIVIC] window.__GHOST_CONFIG__:', window.__GHOST_CONFIG__);
         console.log('[CIVIC] decorate() called with key:', this.getKey());
 
-        return (
-            <KoenigCardWrapper nodeKey={this.getKey()}>
-                <CivicActionCard
-                    {...this.getDataset()}
-                    bridgeUrl={bridgeUrl}
-                    onUpdate={(updates) => {
-                        const writable = this.getWritable();
+        const nodeKey = this.getKey();
+        const dataset = this.getDataset();
+
+        const CivicActionCardWrapper = () => {
+            const [editor] = useLexicalComposerContext();
+
+            const handleUpdate = (updates) => {
+                editor.update(() => {
+                    const node = $getNodeByKey(nodeKey);
+                    if (node) {
+                        const writable = node.getWritable();
                         Object.assign(writable, {
                             __actionId: updates.actionId,
                             __title: updates.title,
@@ -111,8 +116,22 @@ export class CivicActionNode extends DecoratorNode {
                             __takeActionUrl: updates.takeActionUrl,
                             __source: updates.source
                         });
-                    }}
+                    }
+                });
+            };
+
+            return (
+                <CivicActionCard
+                    {...dataset}
+                    bridgeUrl={bridgeUrl}
+                    onUpdate={handleUpdate}
                 />
+            );
+        };
+
+        return (
+            <KoenigCardWrapper nodeKey={nodeKey}>
+                <CivicActionCardWrapper />
             </KoenigCardWrapper>
         );
     }
