@@ -74,7 +74,28 @@ export const AllDefaultPlugins = () => {
 };
 ```
 
-### 4. Install Dependencies
+### 4. Mark Package as External in Vite Config
+
+**CRITICAL:** The civic action card package must be marked as external so Vite doesn't try to bundle it.
+
+In `/var/www/gv/Koenig/packages/koenig-lexical/vite.config.js`:
+
+```javascript
+rollupOptions: {
+    external: [
+        'react',
+        'react-dom',
+        '@linked-claims/koenig-civic-action-card'  // ADD THIS LINE
+    ],
+```
+
+**Why:** CivicActionNode.jsx imports `@linked-claims/koenig-civic-action-card`. Without marking it as external, Vite will try to bundle it during the build, causing errors like:
+
+```
+[vite]: Rollup failed to resolve import "@linked-claims/koenig-civic-action-card"
+```
+
+### 5. Install Dependencies
 
 ```bash
 cd /var/www/gv/Koenig/packages/koenig-lexical
@@ -189,7 +210,10 @@ Check that:
 - v2: First successful deployment to Ghost
 - v3: Fixed clone() method bug (node.__dataset → node.getDataset())
 - v4: Added createDOM() method + restored CivicActionCard with bridge URL
+- v5: Added script auto-update of vite.config.js to mark package as external
+- v6: Continued refinements
+- v7: Current version with automated deployment script
 
-## Current Version: v4
+## Current Version: v7
 
-Last updated: 2025-11-08 03:31 AM
+Last updated: 2025-11-11
