@@ -1,6 +1,6 @@
 {
   "name": "@linked-claims/koenig-civic-action-card",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Civic Action card component for Ghost's Koenig editor (component only, node integration handled by Koenig)",
   "type": "module",
   "main": "dist/index.js",
