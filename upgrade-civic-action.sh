@@ -54,7 +54,8 @@ OLD_HASH=$(grep -o 'editorHash[^,}]*' "$GHOST_PROD_DIR/current/core/built/admin/
 NEW_HASH=$(node -e "const crypto = require('crypto'); const fs = require('fs'); const file = fs.readFileSync('$GHOST_PROD_DIR/current/core/built/admin/assets/koenig-lexical/koenig-lexical.umd.js', 'utf8'); console.log(crypto.createHash('sha256').update(file).digest('hex').slice(0, 10));")
 echo "Old hash: $OLD_HASH"
 echo "New hash: $NEW_HASH"
-sudo sed -i "s/$OLD_HASH/$NEW_HASH/g" "$GHOST_PROD_DIR/current/core/built/admin/index.html"
+# Use a specific pattern to replace only the editorHash value in URL-encoded JSON, preserving the encoding
+sudo sed -i "s|%22editorHash%22%3A%22${OLD_HASH}%22|%22editorHash%22%3A%22${NEW_HASH}%22|g" "$GHOST_PROD_DIR/current/core/built/admin/index.html"
 
 # Step 7: Restart Ghost via systemd
 echo "Restarting Ghost..."
