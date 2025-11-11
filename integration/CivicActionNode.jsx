@@ -29,7 +29,7 @@ export class CivicActionNode extends DecoratorNode {
     __source;
 
     static kgMenu = [{
-        label: 'Civic Action v6',
+        label: 'Civic Action v7',
         desc: 'Embed a civic action',
         Icon: CivicActionIcon,
         insertCommand: INSERT_CIVIC_ACTION_COMMAND,

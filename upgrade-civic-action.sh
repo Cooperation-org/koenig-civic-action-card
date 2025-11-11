@@ -26,29 +26,43 @@ echo "Upgrading @linked-claims/koenig-civic-action-card..."
 cd "$KOENIG_DIR/packages/koenig-lexical"
 yarn upgrade @linked-claims/koenig-civic-action-card@latest
 
-# Step 2: Build Koenig
+# Step 2: Copy updated integration file if it exists and is different
+echo "Checking for updated integration file..."
+if [ -f "$SCRIPT_DIR/integration/CivicActionNode.jsx" ]; then
+    KOENIG_NODE_FILE="$KOENIG_DIR/packages/koenig-lexical/src/nodes/CivicActionNode.jsx"
+    if [ ! -f "$KOENIG_NODE_FILE" ] || ! cmp -s "$SCRIPT_DIR/integration/CivicActionNode.jsx" "$KOENIG_NODE_FILE"; then
+        echo "Copying updated CivicActionNode.jsx to Koenig..."
+        cp "$SCRIPT_DIR/integration/CivicActionNode.jsx" "$KOENIG_NODE_FILE"
+    else
+        echo "Integration file is already up to date"
+    fi
+else
+    echo "Warning: integration/CivicActionNode.jsx not found in $SCRIPT_DIR"
+fi
+
+# Step 3: Build Koenig
 echo "Building Koenig..."
 yarn build
 
-# Step 3: Copy to Ghost monorepo
+# Step 4: Copy to Ghost monorepo
 echo "Copying to Ghost monorepo..."
 rm -rf "$GHOST_MONO_DIR/node_modules/@tryghost/koenig-lexical/dist"
 cp -r "$KOENIG_DIR/packages/koenig-lexical/dist" "$GHOST_MONO_DIR/node_modules/@tryghost/koenig-lexical/"
 
-# Step 4: Build Ghost Admin
+# Step 5: Build Ghost Admin
 echo "Building Ghost Admin..."
 cd "$GHOST_MONO_DIR/ghost/admin"
 yarn build:dev
 
-# Step 5a: Deploy admin to production
+# Step 6a: Deploy admin to production
 echo "Deploying admin to production..."
 sudo cp -r "$GHOST_MONO_DIR/ghost/admin/dist/"* "$GHOST_PROD_DIR/current/core/built/admin/"
 
-# Step 5b: Deploy Koenig directly to production (admin build doesn't include it)
+# Step 6b: Deploy Koenig directly to production (admin build doesn't include it)
 echo "Deploying Koenig lexical to production..."
 sudo cp -r "$KOENIG_DIR/packages/koenig-lexical/dist/"* "$GHOST_PROD_DIR/current/core/built/admin/assets/koenig-lexical/"
 
-# Step 6: Update hash for cache busting
+# Step 7: Update hash for cache busting
 echo "Updating koenig-lexical hash for cache busting..."
 OLD_HASH=$(grep -o 'editorHash[^,}]*' "$GHOST_PROD_DIR/current/core/built/admin/index.html" | grep -o '[a-f0-9]\{10\}' | head -1)
 NEW_HASH=$(node -e "const crypto = require('crypto'); const fs = require('fs'); const file = fs.readFileSync('$GHOST_PROD_DIR/current/core/built/admin/assets/koenig-lexical/koenig-lexical.umd.js', 'utf8'); console.log(crypto.createHash('sha256').update(file).digest('hex').slice(0, 10));")
@@ -57,7 +71,7 @@ echo "New hash: $NEW_HASH"
 # Use a specific pattern to replace only the editorHash value in URL-encoded JSON, preserving the encoding
 sudo sed -i "s|%22editorHash%22%3A%22${OLD_HASH}%22|%22editorHash%22%3A%22${NEW_HASH}%22|g" "$GHOST_PROD_DIR/current/core/built/admin/index.html"
 
-# Step 7: Restart Ghost via systemd
+# Step 8: Restart Ghost via systemd
 echo "Restarting Ghost..."
 sudo systemctl restart ghost_goldavelez-org
 
