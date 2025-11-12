@@ -45,14 +45,16 @@ else
     echo "Warning: integration/CivicActionNode.jsx not found in $SCRIPT_DIR"
 fi
 
-# Step 2b: Update vite.config.js to mark civic action card as external
-echo "Updating Koenig vite.config.js to mark civic action card as external..."
+# Step 2b: Remove civic action card from external if present (it should be bundled, not external)
+echo "Ensuring civic action card is bundled (not external)..."
 VITE_CONFIG="$KOENIG_DIR/packages/koenig-lexical/vite.config.js"
 if grep -q "@linked-claims/koenig-civic-action-card" "$VITE_CONFIG"; then
-    echo "vite.config.js already has civic action card marked as external"
+    echo "Removing @linked-claims/koenig-civic-action-card from external dependencies..."
+    sed -i "/@linked-claims\/koenig-civic-action-card/d" "$VITE_CONFIG"
+    # Clean up any trailing commas that might be left
+    sed -i "/external: \[/,/\],/ s/,\s*,/,/g" "$VITE_CONFIG"
 else
-    echo "Adding @linked-claims/koenig-civic-action-card to external dependencies..."
-    sed -i "/external: \[/,/\],/ s/'react-dom'/'react-dom',\n                    '@linked-claims\/koenig-civic-action-card'/" "$VITE_CONFIG"
+    echo "vite.config.js is already correct (civic action card not marked as external)"
 fi
 
 # Step 3: Build Koenig
