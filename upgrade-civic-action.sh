@@ -26,6 +26,11 @@ echo "Upgrading @linked-claims/koenig-civic-action-card..."
 cd "$KOENIG_DIR/packages/koenig-lexical"
 yarn upgrade @linked-claims/koenig-civic-action-card@latest
 
+# Step 1b: Install dependencies at workspace root
+echo "Installing dependencies at workspace root..."
+cd "$KOENIG_DIR"
+yarn install
+
 # Step 2: Copy updated integration file if it exists and is different
 echo "Checking for updated integration file..."
 if [ -f "$SCRIPT_DIR/integration/CivicActionNode.jsx" ]; then
@@ -52,6 +57,7 @@ fi
 
 # Step 3: Build Koenig
 echo "Building Koenig..."
+cd "$KOENIG_DIR/packages/koenig-lexical"
 yarn build
 
 # Step 4: Copy to Ghost monorepo
