@@ -57,6 +57,7 @@ fi
 
 # Step 3: Build Koenig
 echo "Building Koenig..."
+cd "$KOENIG_DIR/packages/koenig-lexical"
 yarn build
 
 # Step 4: Copy to Ghost monorepo
