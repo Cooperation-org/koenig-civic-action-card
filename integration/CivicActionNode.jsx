@@ -1,13 +1,15 @@
 console.log('[CIVIC] CivicActionNode.jsx is loading...');
 
 import React from 'react';
-import {CivicActionCard} from '@linked-claims/koenig-civic-action-card';
+import {CivicActionCard, renderCivicActionCard} from '@linked-claims/koenig-civic-action-card';
 import {KoenigCardWrapper} from '../index.js';
-import {DecoratorNode, $getNodeByKey} from 'lexical';
+import {$getNodeByKey} from 'lexical';
 import {createCommand} from 'lexical';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
+import {KoenigDecoratorNode} from '@tryghost/kg-default-nodes';
 
 console.log('[CIVIC] CivicActionCard imported:', CivicActionCard);
+console.log('[CIVIC] renderCivicActionCard imported:', renderCivicActionCard);
 
 export const INSERT_CIVIC_ACTION_COMMAND = createCommand();
 
@@ -17,7 +19,7 @@ const CivicActionIcon = () => {
     return <div>🏛️</div>;
 };
 
-export class CivicActionNode extends DecoratorNode {
+export class CivicActionNode extends KoenigDecoratorNode {
     __actionId;
     __title;
     __description;
@@ -142,6 +144,10 @@ export class CivicActionNode extends DecoratorNode {
             version: 1,
             ...this.getDataset()
         };
+    }
+
+    exportDOM(options = {}) {
+        return renderCivicActionCard(this.getDataset(), options);
     }
 
     static importJSON(serializedNode) {
