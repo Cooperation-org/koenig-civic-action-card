@@ -80,6 +80,40 @@ sudo cp -r "$GHOST_MONO_DIR/ghost/admin/dist/"* "$GHOST_PROD_DIR/current/core/bu
 echo "Deploying Koenig lexical to production..."
 sudo cp -r "$KOENIG_DIR/packages/koenig-lexical/dist/"* "$GHOST_PROD_DIR/current/core/built/admin/assets/koenig-lexical/"
 
+# Step 6c: Install custom node renderer in Ghost
+echo "Installing civic action renderer in Ghost..."
+GHOST_RENDERER_DIR="$GHOST_PROD_DIR/versions/6.8.0/core/server/services/koenig/node-renderers"
+sudo cp "$SCRIPT_DIR/integration/civicaction-renderer.js" "$GHOST_RENDERER_DIR/"
+
+# Update index.js to register the renderer if not already present
+RENDERER_INDEX="$GHOST_RENDERER_DIR/index.js"
+if ! sudo grep -q "civicaction:" "$RENDERER_INDEX"; then
+    echo "Registering civicaction renderer in index.js..."
+    # First add comma to video line if missing
+    sudo sed -i "s/video: require('.\/video-renderer')/video: require('.\/video-renderer'),/" "$RENDERER_INDEX"
+    # Then add civicaction line after video
+    sudo sed -i "/video: require('.\/video-renderer'),/a\\    civicaction: require('./civicaction-renderer')," "$RENDERER_INDEX"
+else
+    echo "Civicaction renderer already registered"
+fi
+
+# Step 6d: Install CivicActionNode stub for server-side validation
+echo "Installing civic action node stub..."
+GHOST_LIB_DIR="$GHOST_PROD_DIR/versions/6.8.0/core/server/lib"
+sudo cp "$SCRIPT_DIR/integration/civicaction-node-stub.js" "$GHOST_LIB_DIR/"
+
+# Register node stub in lexical.js if not already present
+LEXICAL_JS="$GHOST_LIB_DIR/lexical.js"
+if ! sudo grep -q "civicaction-node-stub" "$LEXICAL_JS"; then
+    echo "Registering civic action node stub in lexical.js..."
+    # Add require at top of populateNodes function
+    sudo sed -i "/function populateNodes() {/a\\    const CivicActionNodeStub = require('./civicaction-node-stub');" "$LEXICAL_JS"
+    # Add to nodes array
+    sudo sed -i "/nodes = DEFAULT_NODES;/a\\    nodes = [...nodes, CivicActionNodeStub];" "$LEXICAL_JS"
+else
+    echo "Civic action node stub already registered"
+fi
+
 # Step 7: Update hash for cache busting
 echo "Updating koenig-lexical hash for cache busting..."
 OLD_HASH=$(grep -o 'editorHash[^,}]*' "$GHOST_PROD_DIR/current/core/built/admin/index.html" | grep -o '[a-f0-9]\{10\}' | head -1)
