@@ -4,21 +4,41 @@ set -e
 # Upgrade script for Civic Action Card
 # Run this after publishing a new version to npm
 #
-# Required environment variables (or defaults):
-#   KOENIG_DIR - Path to Koenig repository (default: /var/www/gv/Koenig)
-#   GHOST_MONO_DIR - Path to Ghost monorepo for building (default: /var/www/gv/ghost-civic-new)
-#   GHOST_PROD_DIR - Path to production Ghost installation (default: /var/www/gv/ghost-civic)
+# Configurable environment variables (or defaults):
+#   KOENIG_DIR - Path to Koenig repository
+#   GHOST_MONO_DIR - Path to Ghost monorepo for building
+#   GHOST_PROD_DIR - Path to production Ghost installation
+#   GHOST_VERSION - Ghost version number (affects paths in versions/)
+#   GHOST_THEME - Theme name (default: journal)
+#   GHOST_SERVICE - Systemd service name (default: ghost_goldavelez-org)
 
 # Convert to absolute paths
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Server paths - configure these for your environment
 KOENIG_DIR="${KOENIG_DIR:-/var/www/gv/Koenig}"
 GHOST_MONO_DIR="${GHOST_MONO_DIR:-/var/www/gv/ghost-civic-new}"
 GHOST_PROD_DIR="${GHOST_PROD_DIR:-/var/www/gv/ghost-civic}"
+
+# Ghost configuration
+GHOST_VERSION="${GHOST_VERSION:-6.8.0}"
+GHOST_THEME="${GHOST_THEME:-journal}"
+GHOST_SERVICE="${GHOST_SERVICE:-ghost_goldavelez-org}"
+
+# Derived paths (don't usually need to change these)
+GHOST_VERSIONS_DIR="$GHOST_PROD_DIR/versions/$GHOST_VERSION"
+GHOST_RENDERER_DIR="$GHOST_VERSIONS_DIR/core/server/services/koenig/node-renderers"
+GHOST_LIB_DIR="$GHOST_VERSIONS_DIR/core/server/lib"
+THEME_DIR="$GHOST_PROD_DIR/content/themes/$GHOST_THEME"
+THEME_ASSETS_DIR="$THEME_DIR/assets/built"
 
 echo "=== Civic Action Card Upgrade ==="
 echo "Koenig: $KOENIG_DIR"
 echo "Ghost Mono: $GHOST_MONO_DIR"
 echo "Ghost Prod: $GHOST_PROD_DIR"
+echo "Ghost Version: $GHOST_VERSION"
+echo "Theme: $GHOST_THEME"
+echo "Service: $GHOST_SERVICE"
 echo ""
 
 # Step 1: Upgrade package in Koenig
@@ -82,7 +102,6 @@ sudo cp -r "$KOENIG_DIR/packages/koenig-lexical/dist/"* "$GHOST_PROD_DIR/current
 
 # Step 6c: Install custom node renderer in Ghost
 echo "Installing civic action renderer in Ghost..."
-GHOST_RENDERER_DIR="$GHOST_PROD_DIR/versions/6.8.0/core/server/services/koenig/node-renderers"
 sudo cp "$SCRIPT_DIR/integration/civicaction-renderer.js" "$GHOST_RENDERER_DIR/"
 
 # Update index.js to register the renderer if not already present
@@ -99,7 +118,6 @@ fi
 
 # Step 6d: Install CivicActionNode stub for server-side validation
 echo "Installing civic action node stub..."
-GHOST_LIB_DIR="$GHOST_PROD_DIR/versions/6.8.0/core/server/lib"
 sudo cp "$SCRIPT_DIR/integration/civicaction-node-stub.js" "$GHOST_LIB_DIR/"
 
 # Register node stub in lexical.js if not already present
@@ -122,8 +140,6 @@ yarn build:client
 
 # Step 6f: Deploy client renderer to theme assets
 echo "Deploying client renderer to theme..."
-THEME_DIR="$GHOST_PROD_DIR/content/themes/journal"
-THEME_ASSETS_DIR="$THEME_DIR/assets/built"
 if [ -d "$THEME_ASSETS_DIR" ]; then
     sudo cp "$SCRIPT_DIR/dist/civic-action-renderer.min.js" "$THEME_ASSETS_DIR/"
     sudo cp "$SCRIPT_DIR/dist/civic-action-renderer.min.js.map" "$THEME_ASSETS_DIR/" 2>/dev/null || true
@@ -158,14 +174,14 @@ sudo sed -i "s|%22editorHash%22%3A%22${OLD_HASH}%22|%22editorHash%22%3A%22${NEW_
 
 # Step 8: Restart Ghost via systemd
 echo "Restarting Ghost..."
-sudo systemctl restart ghost_goldavelez-org
+sudo systemctl restart "$GHOST_SERVICE"
 
 echo ""
 echo "Waiting for Ghost to start..."
 sleep 3
 
 # Check status
-sudo systemctl status ghost_goldavelez-org --no-pager | head -15
+sudo systemctl status "$GHOST_SERVICE" --no-pager | head -15
 
 echo ""
 echo "=== Upgrade complete! ==="
