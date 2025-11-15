@@ -50,6 +50,10 @@ function renderCivicActions() {
                     location={data.location}
                     imageUrl={data.imageUrl}
                     takeActionUrl={data.takeActionUrl}
+                    externalUrl={data.externalUrl}
+                    zipcode={data.zipcode}
+                    isVirtual={data.isVirtual}
+                    sourceMeta={data.sourceMeta}
                     source={data.source}
                     isEditor={false}
                 />
