@@ -114,6 +114,39 @@ else
     echo "Civic action node stub already registered"
 fi
 
+# Step 6e: Build client-side renderer
+echo "Building client-side renderer..."
+cd "$SCRIPT_DIR"
+yarn install
+yarn build:client
+
+# Step 6f: Deploy client renderer to theme assets
+echo "Deploying client renderer to theme..."
+THEME_DIR="$GHOST_PROD_DIR/content/themes/journal"
+THEME_ASSETS_DIR="$THEME_DIR/assets/built"
+if [ -d "$THEME_ASSETS_DIR" ]; then
+    sudo cp "$SCRIPT_DIR/dist/civic-action-renderer.min.js" "$THEME_ASSETS_DIR/"
+    sudo cp "$SCRIPT_DIR/dist/civic-action-renderer.min.js.map" "$THEME_ASSETS_DIR/" 2>/dev/null || true
+    echo "Client renderer deployed to theme assets"
+else
+    echo "Warning: Theme assets directory not found at $THEME_ASSETS_DIR"
+fi
+
+# Step 6g: Inject script tag into theme's default.hbs (idempotent)
+echo "Injecting client renderer script into theme..."
+DEFAULT_HBS="$THEME_DIR/default.hbs"
+if [ -f "$DEFAULT_HBS" ]; then
+    if ! sudo grep -q "civic-action-renderer.min.js" "$DEFAULT_HBS"; then
+        echo "Adding script tag to default.hbs..."
+        # Add before </body> tag, only on post pages
+        sudo sed -i 's|</body>|{{#is "post"}}\n    <script src="{{asset \"built/civic-action-renderer.min.js\"}}"></script>\n{{/is}}\n</body>|' "$DEFAULT_HBS"
+    else
+        echo "Script tag already present in default.hbs"
+    fi
+else
+    echo "Warning: default.hbs not found at $DEFAULT_HBS"
+fi
+
 # Step 7: Update hash for cache busting
 echo "Updating koenig-lexical hash for cache busting..."
 OLD_HASH=$(grep -o 'editorHash[^,}]*' "$GHOST_PROD_DIR/current/core/built/admin/index.html" | grep -o '[a-f0-9]\{10\}' | head -1)
