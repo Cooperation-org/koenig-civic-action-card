@@ -378,7 +378,7 @@ export function CivicActionCard({
         }
     }, [actionId, bridgeUrl]);
 
-    const truncateDescription = (text, maxWords = 200) => {
+    const truncateDescription = (text, maxWords = 100) => {
         if (!text) return text;
         const words = text.split(/\s+/);
         if (words.length <= maxWords) return text;
@@ -386,9 +386,10 @@ export function CivicActionCard({
     };
 
     const formatDescription = (text) => {
-        if (!text) return text;
+        if (!text) return null;
         const truncated = truncateDescription(text);
-        return truncated.split('\n').filter(p => p.trim()).map((para, i) => (
+        const paragraphs = truncated.split('\n').filter(p => p.trim());
+        return paragraphs.map((para, i) => (
             <p key={i} style={{marginBottom: '0.75rem'}}>{para}</p>
         ));
     };
@@ -557,6 +558,21 @@ export function CivicActionCard({
                             </svg>
                             Change Action
                         </button>
+                        {externalUrl && (
+                            <a
+                                href={externalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="preview-button secondary"
+                            >
+                                View Original
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 8.5V13H3V4H7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <path d="M9 3H13V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M6.5 9.5L13 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                            </a>
+                        )}
                     </div>
                 )}
                 

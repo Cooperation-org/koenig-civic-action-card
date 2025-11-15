@@ -15,7 +15,11 @@ function renderCivicActionNode(node, options = {}) {
         eventDate,
         location,
         imageUrl,
-        takeActionUrl
+        takeActionUrl,
+        externalUrl,
+        zipcode,
+        isVirtual,
+        sourceMeta
     } = node;
 
     // Don't render if no content
@@ -49,6 +53,10 @@ function renderCivicActionNode(node, options = {}) {
         location: node.location,
         imageUrl: node.imageUrl,
         takeActionUrl: node.takeActionUrl,
+        externalUrl: node.externalUrl,
+        zipcode: node.zipcode,
+        isVirtual: node.isVirtual,
+        sourceMeta: node.sourceMeta,
         source: node.source
     }));
 
@@ -100,12 +108,63 @@ function renderCivicActionNode(node, options = {}) {
         content.appendChild(titleEl);
     }
 
-    // Add description
+    // Add description (truncated to 100 words with paragraphs)
     if (description) {
-        const descEl = document.createElement('p');
-        descEl.setAttribute('class', 'preview-description');
-        descEl.textContent = description;
-        content.appendChild(descEl);
+        const descDiv = document.createElement('div');
+        descDiv.setAttribute('class', 'preview-description');
+        
+        // Truncate to 100 words
+        const words = description.split(/\s+/);
+        const maxWords = 100;
+        const truncated = words.length > maxWords 
+            ? words.slice(0, maxWords).join(' ') + '...'
+            : description;
+        
+        // Split by newlines and create paragraphs
+        const paragraphs = truncated.split('\n').filter(p => p.trim());
+        if (paragraphs.length === 0) {
+            const p = document.createElement('p');
+            p.textContent = truncated;
+            descDiv.appendChild(p);
+        } else {
+            paragraphs.forEach(para => {
+                const p = document.createElement('p');
+                p.textContent = para;
+                descDiv.appendChild(p);
+            });
+        }
+        
+        content.appendChild(descDiv);
+    }
+
+    // Add sponsor info if available
+    if (sourceMeta && sourceMeta.sponsor) {
+        const sponsorDiv = document.createElement('div');
+        sponsorDiv.setAttribute('class', 'preview-sponsor');
+
+        if (sourceMeta.sponsor.logo_url) {
+            const logoImg = document.createElement('img');
+            logoImg.setAttribute('src', sourceMeta.sponsor.logo_url);
+            logoImg.setAttribute('alt', sourceMeta.sponsor.name);
+            logoImg.setAttribute('class', 'sponsor-logo');
+            sponsorDiv.appendChild(logoImg);
+        }
+
+        const sponsorInfo = document.createElement('div');
+        sponsorInfo.setAttribute('class', 'sponsor-info');
+
+        const sponsorLabel = document.createElement('span');
+        sponsorLabel.setAttribute('class', 'sponsor-label');
+        sponsorLabel.textContent = 'Organized by';
+        sponsorInfo.appendChild(sponsorLabel);
+
+        const sponsorName = document.createElement('span');
+        sponsorName.setAttribute('class', 'sponsor-name');
+        sponsorName.textContent = sourceMeta.sponsor.name;
+        sponsorInfo.appendChild(sponsorName);
+
+        sponsorDiv.appendChild(sponsorInfo);
+        content.appendChild(sponsorDiv);
     }
 
     // Add event details (date and location)
@@ -123,11 +182,18 @@ function renderCivicActionNode(node, options = {}) {
             dateDetail.appendChild(iconSpan);
 
             const dateText = document.createElement('span');
-            dateText.textContent = eventDateObj.toLocaleDateString('en-US', {
+            const dateStr = eventDateObj.toLocaleDateString('en-US', {
+                weekday: 'short',
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric'
             });
+            const timeStr = eventDateObj.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            dateText.textContent = `${dateStr} at ${timeStr}`;
             dateDetail.appendChild(dateText);
             details.appendChild(dateDetail);
         }
@@ -142,31 +208,152 @@ function renderCivicActionNode(node, options = {}) {
             locationDetail.appendChild(iconSpan);
 
             const locationText = document.createElement('span');
-            locationText.textContent = location;
+            locationText.textContent = location + (zipcode ? ` ${zipcode}` : '');
             locationDetail.appendChild(locationText);
             details.appendChild(locationDetail);
+        }
+
+        if (isVirtual) {
+            const virtualDetail = document.createElement('div');
+            virtualDetail.setAttribute('class', 'preview-detail');
+            const iconSpan = document.createElement('span');
+            iconSpan.textContent = '💻 ';
+            virtualDetail.appendChild(iconSpan);
+            const virtualText = document.createElement('span');
+            virtualText.setAttribute('class', 'virtual-badge');
+            virtualText.textContent = 'Virtual Event';
+            virtualDetail.appendChild(virtualText);
+            details.appendChild(virtualDetail);
         }
 
         content.appendChild(details);
     }
 
-    // Add action button if URL is present
-    if (takeActionUrl) {
-        const footer = document.createElement('div');
-        footer.setAttribute('class', 'preview-footer');
+    // Add action section
+    const actionsSection = document.createElement('div');
+    actionsSection.setAttribute('class', 'preview-actions-section');
+
+    // Add Take Action button if URL is present and not expired
+    if (takeActionUrl && !isExpired) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.setAttribute('class', 'preview-actions');
 
         const link = document.createElement('a');
         link.setAttribute('href', takeActionUrl);
-        link.setAttribute('class', isExpired ? 'preview-button secondary' : 'preview-button primary');
+        link.setAttribute('class', 'preview-button primary');
         link.setAttribute('target', '_blank');
         link.setAttribute('rel', 'noopener noreferrer');
-        link.textContent = isExpired ? 'View Details' : 'Take Action';
+        link.textContent = 'Take Action';
 
-        footer.appendChild(link);
-        content.appendChild(footer);
+        actionsDiv.appendChild(link);
+        actionsSection.appendChild(actionsDiv);
+    }
+
+    // Add footer with checkbox and links
+    const footer = document.createElement('div');
+    footer.setAttribute('class', 'preview-footer');
+
+    // Checkbox
+    const checkboxLabel = document.createElement('label');
+    checkboxLabel.setAttribute('class', 'preview-checkbox-label');
+
+    const checkbox = document.createElement('input');
+    checkbox.setAttribute('type', 'checkbox');
+    checkbox.setAttribute('class', 'preview-checkbox');
+    checkbox.setAttribute('data-action-id', node.actionId || '');
+    checkbox.setAttribute('data-civic-action-complete', 'true');
+
+    const checkboxText = document.createElement('span');
+    checkboxText.setAttribute('class', 'checkbox-text');
+    checkboxText.textContent = 'Did this!';
+
+    checkboxLabel.appendChild(checkbox);
+    checkboxLabel.appendChild(checkboxText);
+    footer.appendChild(checkboxLabel);
+
+    // Links container
+    const linksDiv = document.createElement('div');
+    linksDiv.setAttribute('class', 'preview-links');
+
+    // External source link
+    if (externalUrl) {
+        const sourceLink = document.createElement('a');
+        sourceLink.setAttribute('href', externalUrl);
+        sourceLink.setAttribute('class', 'preview-link source-link');
+        sourceLink.setAttribute('target', '_blank');
+        sourceLink.setAttribute('rel', 'noopener noreferrer');
+        sourceLink.textContent = 'Original ↗';
+        linksDiv.appendChild(sourceLink);
+    }
+
+    // Dashboard link
+    const dashboardLink = document.createElement('a');
+    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us');
+    dashboardLink.setAttribute('class', 'preview-link dashboard-link');
+    dashboardLink.setAttribute('target', '_blank');
+    dashboardLink.setAttribute('rel', 'noopener noreferrer');
+    dashboardLink.textContent = 'Your Impact Dashboard →';
+    linksDiv.appendChild(dashboardLink);
+
+    footer.appendChild(linksDiv);
+    actionsSection.appendChild(footer);
+    content.appendChild(actionsSection);
+
+    // Add View Details button for expired events
+    if (takeActionUrl && isExpired) {
+        const expiredActions = document.createElement('div');
+        expiredActions.setAttribute('class', 'preview-actions');
+
+        const link = document.createElement('a');
+        link.setAttribute('href', takeActionUrl);
+        link.setAttribute('class', 'preview-button secondary');
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+        link.textContent = 'View Details';
+
+        expiredActions.appendChild(link);
+        content.appendChild(expiredActions);
     }
 
     figure.appendChild(content);
+
+    // Add inline script for checkbox functionality
+    const script = document.createElement('script');
+    script.textContent = `
+(function(){
+const BRIDGE_URL='https://bridge.linkedtrust.us';
+function initCivicActionCards(){
+const checkboxes=document.querySelectorAll('[data-civic-action-complete="true"]');
+checkboxes.forEach(checkbox=>{
+const actionId=checkbox.getAttribute('data-action-id');
+if(!actionId)return;
+const storageKey='civic-action-'+actionId;
+const isCompleted=localStorage.getItem(storageKey)==='true';
+checkbox.checked=isCompleted;
+checkbox.addEventListener('change',async function(e){
+const isChecked=e.target.checked;
+localStorage.setItem(storageKey,isChecked.toString());
+if(isChecked&&actionId){
+try{
+const response=await fetch(BRIDGE_URL+'/api/public/civic-actions/'+actionId+'/complete',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+credentials:'include'
+});
+if(!response.ok){console.warn('Failed to record civic action completion');}
+}catch(err){console.warn('Error recording civic action:',err);}
+}
+});
+});
+}
+if(document.readyState==='loading'){
+document.addEventListener('DOMContentLoaded',initCivicActionCards);
+}else{
+initCivicActionCards();
+}
+})();
+`;
+    figure.appendChild(script);
 
     return {element: figure};
 }

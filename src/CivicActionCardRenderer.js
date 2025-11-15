@@ -88,24 +88,32 @@ export function renderCivicActionCard(node, options = {}) {
         content.appendChild(titleEl);
     }
 
-    // Add description (truncated to 200 words with paragraphs)
+    // Add description (truncated to 100 words with paragraphs)
     if (description) {
         const descDiv = document.createElement('div');
         descDiv.setAttribute('class', 'preview-description');
         
+        // Truncate to 100 words
         const words = description.split(/\s+/);
-        const maxWords = 200;
+        const maxWords = 100;
         const truncated = words.length > maxWords 
             ? words.slice(0, maxWords).join(' ') + '...'
             : description;
         
         // Split by newlines and create paragraphs
         const paragraphs = truncated.split('\n').filter(p => p.trim());
-        paragraphs.forEach(para => {
+        if (paragraphs.length === 0) {
+            // If no newlines, just use the whole text as one paragraph
             const p = document.createElement('p');
-            p.textContent = para;
+            p.textContent = truncated;
             descDiv.appendChild(p);
-        });
+        } else {
+            paragraphs.forEach(para => {
+                const p = document.createElement('p');
+                p.textContent = para;
+                descDiv.appendChild(p);
+            });
+        }
         
         content.appendChild(descDiv);
     }
