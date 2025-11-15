@@ -11,6 +11,10 @@ export function CivicActionCard({
     location = '',
     imageUrl = '',
     takeActionUrl = '',
+    externalUrl = '',
+    zipcode = '',
+    isVirtual = false,
+    sourceMeta = null,
     source = 'community',
     bridgeUrl = (typeof window !== 'undefined' && window.__GHOST_CONFIG__?.civicBridgeUrl) ||
                 (typeof process !== 'undefined' && process.env.CIVIC_BRIDGE_URL) ||
@@ -78,7 +82,11 @@ export function CivicActionCard({
                 eventDate: action.eventDate,
                 location: action.location,
                 imageUrl: action.imageUrl,
-                takeActionUrl: action.takeActionUrl
+                takeActionUrl: action.takeActionUrl,
+                externalUrl: action.externalUrl,
+                zipcode: action.zipcode,
+                isVirtual: action.isVirtual,
+                sourceMeta: action.sourceMeta
             });
         }
         setSearchResults([]);
@@ -343,8 +351,47 @@ export function CivicActionCard({
         );
     }
 
+    const [completed, setCompleted] = useState(false);
+    const [recordingAction, setRecordingAction] = useState(false);
+
     const eventDateObj = eventDate ? new Date(eventDate) : null;
     const isExpired = eventDateObj && eventDateObj < new Date();
+
+    const handleCompleteAction = useCallback(async (checked) => {
+        setCompleted(checked);
+        if (!checked || !actionId) return;
+
+        setRecordingAction(true);
+        try {
+            const response = await fetch(`${bridgeUrl}/api/public/civic-actions/${actionId}/complete`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                console.error('Failed to record action completion');
+            }
+        } catch (err) {
+            console.error('Error recording action:', err);
+        } finally {
+            setRecordingAction(false);
+        }
+    }, [actionId, bridgeUrl]);
+
+    const truncateDescription = (text, maxWords = 200) => {
+        if (!text) return text;
+        const words = text.split(/\s+/);
+        if (words.length <= maxWords) return text;
+        return words.slice(0, maxWords).join(' ') + '...';
+    };
+
+    const formatDescription = (text) => {
+        if (!text) return text;
+        const truncated = truncateDescription(text);
+        return truncated.split('\n').filter(p => p.trim()).map((para, i) => (
+            <p key={i} style={{marginBottom: '0.75rem'}}>{para}</p>
+        ));
+    };
 
     return (
         <div className={`civic-action-preview-card ${isExpired ? 'expired' : ''} ${isEditor ? 'editor-mode' : 'reader-mode'}`}>
@@ -369,7 +416,23 @@ export function CivicActionCard({
                 </div>
 
                 <h3 className="preview-title">{title}</h3>
-                <p className="preview-description">{description}</p>
+                <div className="preview-description">{formatDescription(description)}</div>
+
+                {sourceMeta?.sponsor && (
+                    <div className="preview-sponsor">
+                        {sourceMeta.sponsor.logo_url && (
+                            <img 
+                                src={sourceMeta.sponsor.logo_url} 
+                                alt={sourceMeta.sponsor.name}
+                                className="sponsor-logo"
+                            />
+                        )}
+                        <div className="sponsor-info">
+                            <span className="sponsor-label">Organized by</span>
+                            <span className="sponsor-name">{sourceMeta.sponsor.name}</span>
+                        </div>
+                    </div>
+                )}
 
                 {(eventDateObj || location) && (
                     <div className="preview-details">
@@ -388,6 +451,12 @@ export function CivicActionCard({
                                         month: 'short',
                                         day: 'numeric'
                                     })}
+                                    {' at '}
+                                    {eventDateObj.toLocaleTimeString('en-US', {
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                        hour12: true
+                                    })}
                                 </span>
                             </div>
                         )}
@@ -397,25 +466,82 @@ export function CivicActionCard({
                                     <path d="M14 6.66667C14 11.3333 8 15.3333 8 15.3333C8 15.3333 2 11.3333 2 6.66667C2 5.07536 2.63214 3.54926 3.75736 2.42404C4.88258 1.29882 6.40869 0.666672 8 0.666672C9.59131 0.666672 11.1174 1.29882 12.2426 2.42404C13.3679 3.54926 14 5.07536 14 6.66667Z" stroke="currentColor" strokeWidth="1.5"/>
                                     <circle cx="8" cy="6.66667" r="2" stroke="currentColor" strokeWidth="1.5"/>
                                 </svg>
-                                <span>{location}</span>
+                                <span>{location}{zipcode ? ` ${zipcode}` : ''}</span>
+                            </div>
+                        )}
+                        {isVirtual && (
+                            <div className="preview-detail">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="1" y="3" width="14" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                                    <path d="M5 13L7 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <path d="M11 13L9 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                    <path d="M1 10H15" stroke="currentColor" strokeWidth="1.5"/>
+                                </svg>
+                                <span className="virtual-badge">Virtual Event</span>
                             </div>
                         )}
                     </div>
                 )}
 
-                {takeActionUrl && !isExpired && (
-                    <div className="preview-actions">
-                        <a
-                            href={takeActionUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="preview-button primary"
-                        >
-                            Take Action
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                        </a>
+                {!isEditor && (
+                    <div className="preview-actions-section">
+                        {takeActionUrl && !isExpired && (
+                            <div className="preview-actions">
+                                <a
+                                    href={takeActionUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="preview-button primary"
+                                >
+                                    Take Action
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        )}
+                        
+                        <div className="preview-footer">
+                            <label className="preview-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={completed}
+                                    onChange={(e) => handleCompleteAction(e.target.checked)}
+                                    disabled={recordingAction}
+                                    className="preview-checkbox"
+                                />
+                                <span className="checkbox-text">Did this!</span>
+                            </label>
+                            
+                            <div className="preview-links">
+                                {externalUrl && (
+                                    <a
+                                        href={externalUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="preview-link source-link"
+                                    >
+                                        Original
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10 6.5V10.5H1.5V2H5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                            <path d="M7 1.5H10.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            <path d="M5.5 6.5L10.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                        </svg>
+                                    </a>
+                                )}
+                                <a
+                                    href="https://bridge.linkedtrust.us"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="preview-link dashboard-link"
+                                >
+                                    Your Impact Dashboard
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4.5 2.25L8.25 6L4.5 9.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -431,6 +557,19 @@ export function CivicActionCard({
                             </svg>
                             Change Action
                         </button>
+                    </div>
+                )}
+                
+                {!isEditor && takeActionUrl && isExpired && (
+                    <div className="preview-actions">
+                        <a
+                            href={takeActionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="preview-button secondary"
+                        >
+                            View Details
+                        </a>
                     </div>
                 )}
             </div>

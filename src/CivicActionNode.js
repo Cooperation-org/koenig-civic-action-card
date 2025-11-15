@@ -11,10 +11,14 @@ export class CivicActionNode extends generateDecoratorNode({
         {name: 'eventDate', default: ''},
         {name: 'location', default: ''},
         {name: 'imageUrl', default: ''},
-        {name: 'takeActionUrl', default: ''}
+        {name: 'takeActionUrl', default: ''},
+        {name: 'externalUrl', default: ''},
+        {name: 'zipcode', default: ''},
+        {name: 'isVirtual', default: false},
+        {name: 'sourceMeta', default: null}
     ]
 }) {
-    constructor({actionId, source, title, description, eventType, eventDate, location, imageUrl, takeActionUrl} = {}, key) {
+    constructor({actionId, source, title, description, eventType, eventDate, location, imageUrl, takeActionUrl, externalUrl, zipcode, isVirtual, sourceMeta} = {}, key) {
         super(key);
         this.__actionId = actionId || '';
         this.__source = source || 'community';
@@ -25,6 +29,10 @@ export class CivicActionNode extends generateDecoratorNode({
         this.__location = location || '';
         this.__imageUrl = imageUrl || '';
         this.__takeActionUrl = takeActionUrl || '';
+        this.__externalUrl = externalUrl || '';
+        this.__zipcode = zipcode || '';
+        this.__isVirtual = isVirtual || false;
+        this.__sourceMeta = sourceMeta || null;
     }
 
     getDataset() {
@@ -38,13 +46,17 @@ export class CivicActionNode extends generateDecoratorNode({
             eventDate: self.__eventDate,
             location: self.__location,
             imageUrl: self.__imageUrl,
-            takeActionUrl: self.__takeActionUrl
+            takeActionUrl: self.__takeActionUrl,
+            externalUrl: self.__externalUrl,
+            zipcode: self.__zipcode,
+            isVirtual: self.__isVirtual,
+            sourceMeta: self.__sourceMeta
         };
     }
 
     static importJSON(serializedNode) {
-        const {actionId, source, title, description, eventType, eventDate, location, imageUrl, takeActionUrl} = serializedNode;
-        return new this({actionId, source, title, description, eventType, eventDate, location, imageUrl, takeActionUrl});
+        const {actionId, source, title, description, eventType, eventDate, location, imageUrl, takeActionUrl, externalUrl, zipcode, isVirtual, sourceMeta} = serializedNode;
+        return new this({actionId, source, title, description, eventType, eventDate, location, imageUrl, takeActionUrl, externalUrl, zipcode, isVirtual, sourceMeta});
     }
 
     exportJSON() {
@@ -59,7 +71,11 @@ export class CivicActionNode extends generateDecoratorNode({
             eventDate: this.eventDate,
             location: this.location,
             imageUrl: this.imageUrl,
-            takeActionUrl: this.takeActionUrl
+            takeActionUrl: this.takeActionUrl,
+            externalUrl: this.externalUrl,
+            zipcode: this.zipcode,
+            isVirtual: this.isVirtual,
+            sourceMeta: this.sourceMeta
         };
     }
 
