@@ -17,6 +17,8 @@
   ],
   "scripts": {
     "build": "rollup -c",
+    "build:client": "rollup -c rollup.config.client.js",
+    "test:client": "node test-client-renderer.cjs",
     "dev": "rollup -c -w",
     "prepublishOnly": "npm run build"
   },
@@ -30,9 +32,13 @@
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@svgr/rollup": "^8.1.0",
+    "jsdom": "^27.2.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "rollup": "^4.9.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.0"
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-terser": "^7.0.2"
   },
   "keywords": [
     "ghost",
