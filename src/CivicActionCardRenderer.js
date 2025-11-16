@@ -80,12 +80,27 @@ export function renderCivicActionCard(node, options = {}) {
         content.appendChild(header);
     }
 
-    // Add title
+    // Add title (as link to externalUrl if available)
     if (title) {
-        const titleEl = document.createElement('h3');
-        titleEl.setAttribute('class', 'preview-title');
-        titleEl.textContent = title;
-        content.appendChild(titleEl);
+        if (externalUrl) {
+            const titleLink = document.createElement('a');
+            titleLink.setAttribute('href', externalUrl);
+            titleLink.setAttribute('class', 'preview-title-link');
+            titleLink.setAttribute('target', '_blank');
+            titleLink.setAttribute('rel', 'noopener noreferrer');
+            
+            const titleEl = document.createElement('h3');
+            titleEl.setAttribute('class', 'preview-title');
+            titleEl.textContent = title;
+            
+            titleLink.appendChild(titleEl);
+            content.appendChild(titleLink);
+        } else {
+            const titleEl = document.createElement('h3');
+            titleEl.setAttribute('class', 'preview-title');
+            titleEl.textContent = title;
+            content.appendChild(titleEl);
+        }
     }
 
     // Add description (truncated to 100 words with paragraphs)
@@ -395,7 +410,7 @@ export function renderCivicActionCard(node, options = {}) {
 
     // Dashboard link
     const dashboardLink = document.createElement('a');
-    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us');
+    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us/bridge/dashboard');
     dashboardLink.setAttribute('class', 'preview-link dashboard-link');
     dashboardLink.setAttribute('target', '_blank');
     dashboardLink.setAttribute('rel', 'noopener noreferrer');

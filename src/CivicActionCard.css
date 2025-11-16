@@ -444,6 +444,20 @@
     letter-spacing: -0.02em;
 }
 
+.preview-title-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.15s ease;
+}
+
+.preview-title-link:hover {
+    color: #667eea;
+}
+
+.preview-title-link:hover .preview-title {
+    color: #667eea;
+}
+
 .preview-description {
     font-size: 1.0625rem;
     line-height: 1.65;
@@ -637,7 +651,8 @@
 }
 
 .preview-link.source-link {
-    color: #6b7280;
+    color: #667eea;
+    font-weight: 600;
 }
 
 .preview-button {

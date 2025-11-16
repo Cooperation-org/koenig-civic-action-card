@@ -36,6 +36,10 @@ export class CivicActionNodeEditor extends BaseCivicActionNode {
                 location={this.location}
                 imageUrl={this.imageUrl}
                 takeActionUrl={this.takeActionUrl}
+                externalUrl={this.externalUrl}
+                zipcode={this.zipcode}
+                isVirtual={this.isVirtual}
+                sourceMeta={this.sourceMeta}
             />
         );
     }
