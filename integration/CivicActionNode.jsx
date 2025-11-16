@@ -26,6 +26,10 @@ export class CivicActionNode extends DecoratorNode {
     __location;
     __imageUrl;
     __takeActionUrl;
+    __externalUrl;
+    __zipcode;
+    __isVirtual;
+    __sourceMeta;
     __source;
 
     static kgMenu = [{
@@ -59,6 +63,10 @@ export class CivicActionNode extends DecoratorNode {
             this.__location = dataset.location || '';
             this.__imageUrl = dataset.imageUrl || '';
             this.__takeActionUrl = dataset.takeActionUrl || '';
+            this.__externalUrl = dataset.externalUrl || '';
+            this.__zipcode = dataset.zipcode || '';
+            this.__isVirtual = dataset.isVirtual || false;
+            this.__sourceMeta = dataset.sourceMeta || null;
             this.__source = dataset.source || 'community';
             console.log('[CIVIC] CivicActionNode constructed, actionId:', this.__actionId);
         } catch (error) {
@@ -77,6 +85,10 @@ export class CivicActionNode extends DecoratorNode {
             location: this.__location,
             imageUrl: this.__imageUrl,
             takeActionUrl: this.__takeActionUrl,
+            externalUrl: this.__externalUrl,
+            zipcode: this.__zipcode,
+            isVirtual: this.__isVirtual,
+            sourceMeta: this.__sourceMeta,
             source: this.__source
         };
     }
@@ -118,6 +130,10 @@ export class CivicActionNode extends DecoratorNode {
                             __location: updates.location,
                             __imageUrl: updates.imageUrl,
                             __takeActionUrl: updates.takeActionUrl,
+                            __externalUrl: updates.externalUrl,
+                            __zipcode: updates.zipcode,
+                            __isVirtual: updates.isVirtual,
+                            __sourceMeta: updates.sourceMeta,
                             __source: updates.source
                         });
                     }

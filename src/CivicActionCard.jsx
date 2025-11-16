@@ -416,7 +416,15 @@ export function CivicActionCard({
                     )}
                 </div>
 
-                <h3 className="preview-title">{title}</h3>
+                <h3 className="preview-title">
+                    {externalUrl ? (
+                        <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="preview-title-link">
+                            {title}
+                        </a>
+                    ) : (
+                        title
+                    )}
+                </h3>
                 <div className="preview-description">{formatDescription(description)}</div>
 
                 {sourceMeta?.sponsor && (
@@ -531,7 +539,7 @@ export function CivicActionCard({
                                     </a>
                                 )}
                                 <a
-                                    href="https://bridge.linkedtrust.us"
+                                    href="https://bridge.linkedtrust.us/bridge/dashboard"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="preview-link dashboard-link"
