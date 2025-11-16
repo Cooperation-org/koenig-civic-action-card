@@ -172,9 +172,15 @@ echo "New hash: $NEW_HASH"
 # Use a specific pattern to replace only the editorHash value in URL-encoded JSON, preserving the encoding
 sudo sed -i "s|%22editorHash%22%3A%22${OLD_HASH}%22|%22editorHash%22%3A%22${NEW_HASH}%22|g" "$GHOST_PROD_DIR/current/core/built/admin/index.html"
 
-# Step 8: Restart Ghost via systemd
-echo "Restarting Ghost..."
-sudo systemctl restart "$GHOST_SERVICE"
+# Step 8: Stop and start Ghost via systemd (forces Node module cache clear)
+echo "Stopping Ghost..."
+sudo systemctl stop "$GHOST_SERVICE"
+
+echo "Waiting for Ghost to fully stop..."
+sleep 5
+
+echo "Starting Ghost..."
+sudo systemctl start "$GHOST_SERVICE"
 
 echo ""
 echo "Waiting for Ghost to start..."
