@@ -264,7 +264,7 @@ function renderCivicActionNode(node, options = {}) {
         actionsSection.appendChild(actionsDiv);
     }
 
-    // Add footer with checkbox and links
+    // Add footer with checkbox and dashboard link
     const footer = document.createElement('div');
     footer.setAttribute('class', 'preview-footer');
 
@@ -286,32 +286,32 @@ function renderCivicActionNode(node, options = {}) {
     checkboxLabel.appendChild(checkboxText);
     footer.appendChild(checkboxLabel);
 
-    // Links container
-    const linksDiv = document.createElement('div');
-    linksDiv.setAttribute('class', 'preview-links');
+    // Dashboard link (on same row, right-aligned)
+    const dashboardLink = document.createElement('a');
+    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us/bridge/dashboard');
+    dashboardLink.setAttribute('class', 'preview-dashboard-link');
+    dashboardLink.setAttribute('target', '_blank');
+    dashboardLink.setAttribute('rel', 'noopener noreferrer');
+    dashboardLink.innerHTML = '📋 Your Impact Dashboard';
+    footer.appendChild(dashboardLink);
 
-    // External source link
+    actionsSection.appendChild(footer);
+
+    // External source link (on separate line if exists)
     if (externalUrl) {
+        const sourceDiv = document.createElement('div');
+        sourceDiv.setAttribute('class', 'preview-source-only');
+
         const sourceLink = document.createElement('a');
         sourceLink.setAttribute('href', externalUrl);
         sourceLink.setAttribute('class', 'preview-link source-link');
         sourceLink.setAttribute('target', '_blank');
         sourceLink.setAttribute('rel', 'noopener noreferrer');
         sourceLink.textContent = 'Original ↗';
-        linksDiv.appendChild(sourceLink);
+        sourceDiv.appendChild(sourceLink);
+        actionsSection.appendChild(sourceDiv);
     }
 
-    // Dashboard link
-    const dashboardLink = document.createElement('a');
-    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us/bridge/dashboard');
-    dashboardLink.setAttribute('class', 'preview-link dashboard-link');
-    dashboardLink.setAttribute('target', '_blank');
-    dashboardLink.setAttribute('rel', 'noopener noreferrer');
-    dashboardLink.textContent = 'Your Impact Dashboard →';
-    linksDiv.appendChild(dashboardLink);
-
-    footer.appendChild(linksDiv);
-    actionsSection.appendChild(footer);
     content.appendChild(actionsSection);
 
     // Add View Details button for expired events

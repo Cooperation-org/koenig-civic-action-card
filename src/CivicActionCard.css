@@ -558,10 +558,13 @@
 
 .preview-footer {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid rgba(0, 0, 0, 0.06);
+    flex-wrap: wrap;
 }
 
 .preview-checkbox-label {
@@ -618,6 +621,31 @@
     flex-wrap: wrap;
     gap: 1rem;
     align-items: center;
+}
+
+.preview-dashboard-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #667eea;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.preview-dashboard-link:hover {
+    color: #764ba2;
+    gap: 0.5rem;
+}
+
+.preview-dashboard-link svg {
+    flex-shrink: 0;
+}
+
+.preview-source-only {
+    margin-top: 0.5rem;
 }
 
 .preview-link {

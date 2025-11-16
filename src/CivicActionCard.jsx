@@ -522,35 +522,39 @@ export function CivicActionCard({
                                 <span className="checkbox-text">Did this!</span>
                             </label>
                             
-                            <div className="preview-links">
-                                {externalUrl && (
-                                    <a
-                                        href={externalUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="preview-link source-link"
-                                    >
-                                        Original
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M10 6.5V10.5H1.5V2H5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                                            <path d="M7 1.5H10.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                                            <path d="M5.5 6.5L10.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                                        </svg>
-                                    </a>
-                                )}
+                            <a
+                                href="https://bridge.linkedtrust.us/bridge/dashboard"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="preview-dashboard-link"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                                    <path d="M6 2V14" stroke="currentColor" strokeWidth="1.5"/>
+                                    <path d="M2 6H14" stroke="currentColor" strokeWidth="1.5"/>
+                                    <path d="M2 10H6" stroke="currentColor" strokeWidth="1.5"/>
+                                </svg>
+                                Your Impact Dashboard
+                            </a>
+                        </div>
+                        
+                        {externalUrl && (
+                            <div className="preview-source-only">
                                 <a
-                                    href="https://bridge.linkedtrust.us/bridge/dashboard"
+                                    href={externalUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="preview-link dashboard-link"
+                                    className="preview-link source-link"
                                 >
-                                    Your Impact Dashboard
+                                    Original
                                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4.5 2.25L8.25 6L4.5 9.75" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M10 6.5V10.5H1.5V2H5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                        <path d="M7 1.5H10.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M5.5 6.5L10.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                                     </svg>
                                 </a>
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
 

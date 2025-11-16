@@ -341,7 +341,7 @@ export function renderCivicActionCard(node, options = {}) {
         actionsSection.appendChild(actionsDiv);
     }
 
-    // Add footer with checkbox and links
+    // Add footer with checkbox and dashboard link
     const footer = document.createElement('div');
     footer.setAttribute('class', 'preview-footer');
 
@@ -363,12 +363,60 @@ export function renderCivicActionCard(node, options = {}) {
     checkboxLabel.appendChild(checkboxText);
     footer.appendChild(checkboxLabel);
 
-    // Links container
-    const linksDiv = document.createElement('div');
-    linksDiv.setAttribute('class', 'preview-links');
+    // Dashboard link (on same row, right-aligned)
+    const dashboardLink = document.createElement('a');
+    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us/bridge/dashboard');
+    dashboardLink.setAttribute('class', 'preview-dashboard-link');
+    dashboardLink.setAttribute('target', '_blank');
+    dashboardLink.setAttribute('rel', 'noopener noreferrer');
 
-    // Source link
+    const dashSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    dashSvg.setAttribute('width', '16');
+    dashSvg.setAttribute('height', '16');
+    dashSvg.setAttribute('viewBox', '0 0 16 16');
+    dashSvg.setAttribute('fill', 'none');
+    
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '2');
+    rect.setAttribute('y', '2');
+    rect.setAttribute('width', '12');
+    rect.setAttribute('height', '12');
+    rect.setAttribute('rx', '2');
+    rect.setAttribute('stroke', 'currentColor');
+    rect.setAttribute('stroke-width', '1.5');
+    dashSvg.appendChild(rect);
+    
+    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path1.setAttribute('d', 'M6 2V14');
+    path1.setAttribute('stroke', 'currentColor');
+    path1.setAttribute('stroke-width', '1.5');
+    dashSvg.appendChild(path1);
+    
+    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path2.setAttribute('d', 'M2 6H14');
+    path2.setAttribute('stroke', 'currentColor');
+    path2.setAttribute('stroke-width', '1.5');
+    dashSvg.appendChild(path2);
+    
+    const path3 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path3.setAttribute('d', 'M2 10H6');
+    path3.setAttribute('stroke', 'currentColor');
+    path3.setAttribute('stroke-width', '1.5');
+    dashSvg.appendChild(path3);
+    
+    dashboardLink.appendChild(dashSvg);
+    
+    const dashText = document.createTextNode('Your Impact Dashboard');
+    dashboardLink.appendChild(dashText);
+    
+    footer.appendChild(dashboardLink);
+    actionsSection.appendChild(footer);
+
+    // Source link (on separate line if exists)
     if (externalUrl) {
+        const sourceDiv = document.createElement('div');
+        sourceDiv.setAttribute('class', 'preview-source-only');
+
         const sourceLink = document.createElement('a');
         sourceLink.setAttribute('href', externalUrl);
         sourceLink.setAttribute('class', 'preview-link source-link');
@@ -405,34 +453,10 @@ export function renderCivicActionCard(node, options = {}) {
         sourceSvg.appendChild(p3);
 
         sourceLink.appendChild(sourceSvg);
-        linksDiv.appendChild(sourceLink);
+        sourceDiv.appendChild(sourceLink);
+        actionsSection.appendChild(sourceDiv);
     }
 
-    // Dashboard link
-    const dashboardLink = document.createElement('a');
-    dashboardLink.setAttribute('href', 'https://bridge.linkedtrust.us/bridge/dashboard');
-    dashboardLink.setAttribute('class', 'preview-link dashboard-link');
-    dashboardLink.setAttribute('target', '_blank');
-    dashboardLink.setAttribute('rel', 'noopener noreferrer');
-    dashboardLink.textContent = 'Your Impact Dashboard';
-
-    const dashSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    dashSvg.setAttribute('width', '12');
-    dashSvg.setAttribute('height', '12');
-    dashSvg.setAttribute('viewBox', '0 0 12 12');
-    dashSvg.setAttribute('fill', 'none');
-    const dashPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    dashPath.setAttribute('d', 'M4.5 2.25L8.25 6L4.5 9.75');
-    dashPath.setAttribute('stroke', 'currentColor');
-    dashPath.setAttribute('stroke-width', '1.2');
-    dashPath.setAttribute('stroke-linecap', 'round');
-    dashPath.setAttribute('stroke-linejoin', 'round');
-    dashSvg.appendChild(dashPath);
-    dashboardLink.appendChild(dashSvg);
-    linksDiv.appendChild(dashboardLink);
-
-    footer.appendChild(linksDiv);
-    actionsSection.appendChild(footer);
     content.appendChild(actionsSection);
 
     // Add View Details button for expired events
