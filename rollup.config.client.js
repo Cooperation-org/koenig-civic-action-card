@@ -1,6 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import babel from '@rollup/plugin-babel';
+import replace from '@rollup/plugin-replace';
 import postcss from 'rollup-plugin-postcss';
 import svgr from '@svgr/rollup';
 import {terser} from 'rollup-plugin-terser';
@@ -14,6 +15,12 @@ export default {
         sourcemap: true
     },
     plugins: [
+        // Replace process.env references with actual values for browser
+        replace({
+            'process.env.CIVIC_BRIDGE_URL': JSON.stringify(process.env.CIVIC_BRIDGE_URL || ''),
+            'process.env.NODE_ENV': JSON.stringify('production'),
+            preventAssignment: true
+        }),
         svgr(),
         resolve({
             extensions: ['.js', '.jsx'],

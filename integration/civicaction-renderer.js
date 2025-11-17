@@ -42,7 +42,8 @@ function renderCivicActionNode(node, options = {}) {
     // Create main container
     const figure = document.createElement('figure');
     figure.setAttribute('class', `kg-card civic-action-preview-card ${isExpired ? 'expired' : ''} reader-mode`);
-
+    console.log("EXTERNAL url is " + node.externalUrl);
+    console.log('Full node:', JSON.stringify(node, null, 2));
     // Store node data for client-side hydration
     figure.setAttribute('data-civic-action', JSON.stringify({
         actionId: node.actionId,
@@ -101,6 +102,7 @@ function renderCivicActionNode(node, options = {}) {
     }
 
     // Add title (as link to externalUrl if available)
+    console.log("Going to print " + title + " with link " + externalUrl);
     if (title) {
         if (externalUrl) {
             const titleLink = document.createElement('a');
