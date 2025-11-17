@@ -106,6 +106,10 @@ class CivicActionNodeStub extends KoenigDecoratorNode {
     get location() { return this.dataset.location || ''; }
     get imageUrl() { return this.dataset.imageUrl || ''; }
     get takeActionUrl() { return this.dataset.takeActionUrl || ''; }
+    get externalUrl() { return this.dataset.externalUrl || ''; }
+    get zipcode() { return this.dataset.zipcode || ''; }
+    get isVirtual() { return this.dataset.isVirtual || false; }
+    get sourceMeta() { return this.dataset.sourceMeta || null; }
     get source() { return this.dataset.source || 'community'; }
 
     // Lexical node interface - using parent implementations where possible

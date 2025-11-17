@@ -5,6 +5,7 @@ const {addCreateDocumentOption} = require('../render-utils/add-create-document-o
 const {renderEmptyContainer} = require('../render-utils/render-empty-container');
 
 function renderCivicActionNode(node, options = {}) {
+    try {
     addCreateDocumentOption(options);
     const document = options.createDocument();
 
@@ -42,24 +43,14 @@ function renderCivicActionNode(node, options = {}) {
     // Create main container
     const figure = document.createElement('figure');
     figure.setAttribute('class', `kg-card civic-action-preview-card ${isExpired ? 'expired' : ''} reader-mode`);
-    console.log("EXTERNAL url is " + node.externalUrl);
-    console.log('Full node:', JSON.stringify(node, null, 2));
+    const dataset = node.getDataset();
+    console.log("EXTERNAL url is " + node.externalUrl + " dataset url is " + dataset.externalUrl);
+    console.log("TITLE is " + node.title + " dataset title is " + dataset.title);
+    console.log("BARE imageUrl is " + imageUrl + " node imageUrl is " + node.imageUrl + " data imageUrl is " + dataset.imageUrl);
+    console.log('Full dataset:', JSON.stringify(dataset, null, 2));
+
     // Store node data for client-side hydration
-    figure.setAttribute('data-civic-action', JSON.stringify({
-        actionId: node.actionId,
-        title: node.title,
-        description: node.description,
-        eventType: node.eventType,
-        eventDate: node.eventDate,
-        location: node.location,
-        imageUrl: node.imageUrl,
-        takeActionUrl: node.takeActionUrl,
-        externalUrl: node.externalUrl,
-        zipcode: node.zipcode,
-        isVirtual: node.isVirtual,
-        sourceMeta: node.sourceMeta,
-        source: node.source
-    }));
+    figure.setAttribute('data-civic-action', JSON.stringify(node.getDataset()));
 
     // Add image if present
     if (imageUrl) {
@@ -373,6 +364,11 @@ initCivicActionCards();
     figure.appendChild(script);
 
     return {element: figure};
+    } catch (error) {
+        console.error('[CIVIC RENDERER ERROR]', error);
+        console.error('[CIVIC RENDERER ERROR] Stack:', error.stack);
+        throw error;
+    }
 }
 
 module.exports = renderCivicActionNode;
